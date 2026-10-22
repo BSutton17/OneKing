@@ -1,0 +1,298 @@
+{
+  "source": "All Cards.pdf",
+  "cards": {
+    "noble:actors": {
+      "full": "cards/noble/actors.webp",
+      "small": "cards/noble/actors.sm.webp"
+    },
+    "noble:allies": {
+      "full": "cards/noble/allies.webp",
+      "small": "cards/noble/allies.sm.webp"
+    },
+    "noble:bad_blood": {
+      "full": "cards/noble/bad_blood.webp",
+      "small": "cards/noble/bad_blood.sm.webp"
+    },
+    "noble:beggars_blessing": {
+      "full": "cards/noble/beggars_blessing.webp",
+      "small": "cards/noble/beggars_blessing.sm.webp"
+    },
+    "noble:betrayal": {
+      "full": "cards/noble/betrayal.webp",
+      "small": "cards/noble/betrayal.sm.webp"
+    },
+    "noble:betray_the_king": {
+      "full": "cards/noble/betray_the_king.webp",
+      "small": "cards/noble/betray_the_king.sm.webp"
+    },
+    "noble:council_meeting": {
+      "full": "cards/noble/council_meeting.webp",
+      "small": "cards/noble/council_meeting.sm.webp"
+    },
+    "noble:divine_right": {
+      "full": "cards/noble/divine_right.webp",
+      "small": "cards/noble/divine_right.sm.webp"
+    },
+    "noble:grudge": {
+      "full": "cards/noble/grudge.webp",
+      "small": "cards/noble/grudge.sm.webp"
+    },
+    "noble:helping_hand": {
+      "full": "cards/noble/helping_hand.webp",
+      "small": "cards/noble/helping_hand.sm.webp"
+    },
+    "noble:hindsight": {
+      "full": "cards/noble/hindsight.webp",
+      "small": "cards/noble/hindsight.sm.webp"
+    },
+    "noble:icarus": {
+      "full": "cards/noble/icarus.webp",
+      "small": "cards/noble/icarus.sm.webp"
+    },
+    "noble:indebted": {
+      "full": "cards/noble/indebted.webp",
+      "small": "cards/noble/indebted.sm.webp"
+    },
+    "noble:isolation": {
+      "full": "cards/noble/isolation.webp",
+      "small": "cards/noble/isolation.sm.webp"
+    },
+    "noble:king_maker": {
+      "full": "cards/noble/king_maker.webp",
+      "small": "cards/noble/king_maker.sm.webp"
+    },
+    "noble:knight": {
+      "full": "cards/noble/knight.webp",
+      "small": "cards/noble/knight.sm.webp"
+    },
+    "noble:loyalty": {
+      "full": "cards/noble/loyalty.webp",
+      "small": "cards/noble/loyalty.sm.webp"
+    },
+    "noble:meat_for_meat": {
+      "full": "cards/noble/meat_for_meat.webp",
+      "small": "cards/noble/meat_for_meat.sm.webp"
+    },
+    "noble:peoples_champion": {
+      "full": "cards/noble/peoples_champion.webp",
+      "small": "cards/noble/peoples_champion.sm.webp"
+    },
+    "noble:royal_bomb": {
+      "full": "cards/noble/royal_bomb.webp",
+      "small": "cards/noble/royal_bomb.sm.webp"
+    },
+    "noble:scout": {
+      "full": "cards/noble/scout.webp",
+      "small": "cards/noble/scout.sm.webp"
+    },
+    "noble:shadow_deal": {
+      "full": "cards/noble/shadow_deal.webp",
+      "small": "cards/noble/shadow_deal.sm.webp"
+    },
+    "noble:sub_rosa": {
+      "full": "cards/noble/sub_rosa.webp",
+      "small": "cards/noble/sub_rosa.sm.webp"
+    },
+    "noble:subsidies": {
+      "full": "cards/noble/subsidies.webp",
+      "small": "cards/noble/subsidies.sm.webp"
+    },
+    "noble:suppress_rebellion": {
+      "full": "cards/noble/suppress_rebellion.webp",
+      "small": "cards/noble/suppress_rebellion.sm.webp"
+    },
+    "noble:tithe": {
+      "full": "cards/noble/tithe.webp",
+      "small": "cards/noble/tithe.sm.webp"
+    },
+    "noble:unprotected": {
+      "full": "cards/noble/unprotected.webp",
+      "small": "cards/noble/unprotected.sm.webp"
+    },
+    "noble:wrath": {
+      "full": "cards/noble/wrath.webp",
+      "small": "cards/noble/wrath.sm.webp"
+    },
+    "king:black_plague": {
+      "full": "cards/king/black_plague.webp",
+      "small": "cards/king/black_plague.sm.webp"
+    },
+    "king:eye_for_an_eye": {
+      "full": "cards/king/eye_for_an_eye.webp",
+      "small": "cards/king/eye_for_an_eye.sm.webp"
+    },
+    "king:bend_the_knee": {
+      "full": "cards/king/bend_the_knee.webp",
+      "small": "cards/king/bend_the_knee.sm.webp"
+    },
+    "king:helping_hand": {
+      "full": "cards/king/helping_hand.webp",
+      "small": "cards/king/helping_hand.sm.webp"
+    },
+    "king:knight": {
+      "full": "cards/king/knight.webp",
+      "small": "cards/king/knight.sm.webp"
+    },
+    "king:anchor": {
+      "full": "cards/king/anchor.webp",
+      "small": "cards/king/anchor.sm.webp"
+    },
+    "king:loyal_dog": {
+      "full": "cards/king/loyal_dog.webp",
+      "small": "cards/king/loyal_dog.sm.webp"
+    },
+    "king:mad_king": {
+      "full": "cards/king/mad_king.webp",
+      "small": "cards/king/mad_king.sm.webp"
+    },
+    "king:debt_collector": {
+      "full": "cards/king/debt_collector.webp",
+      "small": "cards/king/debt_collector.sm.webp"
+    },
+    "king:royal_parrot": {
+      "full": "cards/king/royal_parrot.webp",
+      "small": "cards/king/royal_parrot.sm.webp"
+    },
+    "king:shifting_tides": {
+      "full": "cards/king/shifting_tides.webp",
+      "small": "cards/king/shifting_tides.sm.webp"
+    },
+    "king:snakes": {
+      "full": "cards/king/snakes.webp",
+      "small": "cards/king/snakes.sm.webp"
+    },
+    "king:sub_rosa": {
+      "full": "cards/king/sub_rosa.webp",
+      "small": "cards/king/sub_rosa.sm.webp"
+    },
+    "king:scapegoat": {
+      "full": "cards/king/scapegoat.webp",
+      "small": "cards/king/scapegoat.sm.webp"
+    },
+    "king:kings_eye": {
+      "full": "cards/king/kings_eye.webp",
+      "small": "cards/king/kings_eye.sm.webp"
+    },
+    "king:we_ride_together": {
+      "full": "cards/king/we_ride_together.webp",
+      "small": "cards/king/we_ride_together.sm.webp"
+    }
+  },
+  "copies": {
+    "noble:actors": 3,
+    "noble:allies": 3,
+    "noble:bad_blood": 3,
+    "noble:beggars_blessing": 3,
+    "noble:betrayal": 4,
+    "noble:betray_the_king": 2,
+    "noble:council_meeting": 3,
+    "noble:divine_right": 1,
+    "noble:grudge": 2,
+    "noble:helping_hand": 3,
+    "noble:hindsight": 2,
+    "noble:icarus": 2,
+    "noble:indebted": 2,
+    "noble:isolation": 3,
+    "noble:king_maker": 2,
+    "noble:knight": 2,
+    "noble:loyalty": 3,
+    "noble:meat_for_meat": 4,
+    "noble:peoples_champion": 1,
+    "noble:royal_bomb": 1,
+    "noble:scout": 2,
+    "noble:shadow_deal": 5,
+    "noble:sub_rosa": 5,
+    "noble:subsidies": 3,
+    "noble:suppress_rebellion": 2,
+    "noble:tithe": 2,
+    "noble:unprotected": 2,
+    "noble:wrath": 4,
+    "king:black_plague": 1,
+    "king:eye_for_an_eye": 1,
+    "king:bend_the_knee": 2,
+    "king:helping_hand": 1,
+    "king:knight": 1,
+    "king:anchor": 2,
+    "king:loyal_dog": 3,
+    "king:mad_king": 1,
+    "king:debt_collector": 2,
+    "king:royal_parrot": 2,
+    "king:shifting_tides": 1,
+    "king:snakes": 1,
+    "king:sub_rosa": 2,
+    "king:scapegoat": 1,
+    "king:kings_eye": 2,
+    "king:we_ride_together": 2
+  },
+  "backs": {
+    "noble": {
+      "full": "backs/noble.webp",
+      "small": "backs/noble.sm.webp"
+    },
+    "king": {
+      "full": "backs/king.webp",
+      "small": "backs/king.sm.webp"
+    },
+    "character": {
+      "full": "backs/character.webp",
+      "small": "backs/character.sm.webp"
+    }
+  },
+  "character": {
+    "king": {
+      "src": "character/king.webp",
+      "width": 724,
+      "height": 1024,
+      "colEdges": [
+        51,
+        253.5,
+        462.5,
+        673
+      ],
+      "rowEdges": [
+        66,
+        190.5,
+        318.5,
+        448.5,
+        576.5,
+        705.5,
+        832.5,
+        958
+      ]
+    },
+    "noble": {
+      "src": "character/noble.webp",
+      "width": 724,
+      "height": 1024,
+      "colEdges": [
+        70,
+        260.0,
+        455.0,
+        653
+      ],
+      "rowEdges": [
+        95,
+        211.5,
+        331.0,
+        452.0,
+        572.0,
+        692.0,
+        811.0,
+        928
+      ]
+    }
+  },
+  "roundTracker": {
+    "src": "round-tracker.webp",
+    "width": 1555,
+    "height": 1103,
+    "centersX": [
+      16.78,
+      38.65,
+      59.81,
+      81.74
+    ]
+  },
+  "token": "token.webp",
+  "banner": "banner.webp"
+}
