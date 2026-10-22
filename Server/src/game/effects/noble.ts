@@ -10,7 +10,7 @@ import { canTake, kingsEyePenalty, take } from '../protection.js';
 import { ask, choiceOf, pickOf, rollOf, supporters, voteOf } from '../prompts.js';
 import { kingOf, log, nameOf, nextId, nobleIds, others, otherNobles } from '../state.js';
 import type { GameState, PlayerId, Prompt, Resolution } from '../types.js';
-import { amountField, announce, lookable, playerField, say, src, takeable, target } from './kit.js';
+import { amountField, announce, lookable, playerField, say, speak, src, takeable, target } from './kit.js';
 import type { CardHandler } from './types.js';
 
 const n = (g: GameState, id: PlayerId) => nameOf(g, id);
@@ -34,14 +34,18 @@ export const noble: Record<string, CardHandler> = {
     start(g, res) {
       if (res.option === 0) {
         announce(g, res, 'everyone must thank the King');
-        ask(g, res, {
-          kind: 'speech', title: 'Thank the King', text: 'Everyone must thank the King for their glorious rule, however horrible and cruel it might have been.',
-          who: nobleIds(g), speech: 'Thank you, my King, for your glorious rule!', allowCustom: true, ms: g.config.speechMs,
+        speak(g, res, {
+          title: 'Thank the King', text: 'Everyone must thank the King for their glorious rule, however horrible and cruel it might have been.',
+          who: nobleIds(g), line: 'Thank you, my King, for your glorious rule!', allowCustom: true,
+          instruction: `Everyone must thank ${n(g, kingOf(g).id)} for their glorious rule — however horrible and cruel it might have been. Out loud!`,
         });
       } else {
         const t = target(res);
         announce(g, res, `everyone must laugh at ${n(g, t)}`);
-        ask(g, res, { kind: 'speech', title: `Laugh at ${n(g, t)}`, text: `Everyone must laugh at ${n(g, t)}.`, who: others(g, t), speech: `HA HA HA! 🤣 ${n(g, t)}!`, allowCustom: true, ms: g.config.speechMs });
+        speak(g, res, {
+          title: `Laugh at ${n(g, t)}`, text: `Everyone must laugh at ${n(g, t)}.`, who: others(g, t), line: `HA HA HA! 🤣 ${n(g, t)}!`, allowCustom: true,
+          instruction: `Everyone must laugh at ${n(g, t)}!`,
+        });
       }
     },
   },
@@ -174,7 +178,10 @@ export const noble: Record<string, CardHandler> = {
       if (res.option === 1) {
         announce(g, res, 'draws two cards and must praise the King');
         draw(g, res.actor, 2);
-        ask(g, res, { kind: 'speech', title: 'Praise the King', text: 'You must praise the King.', who: [res.actor], speech: 'Long live the King! 👑', allowCustom: true, ms: g.config.speechMs });
+        speak(g, res, {
+          title: 'Praise the King', text: 'You must praise the King.', who: [res.actor], line: 'Long live the King! 👑', allowCustom: true,
+          instruction: `${n(g, res.actor)} must praise ${n(g, kingOf(g).id)}.`,
+        });
         return;
       }
       announce(g, res, 'everyone votes');
@@ -307,7 +314,10 @@ export const noble: Record<string, CardHandler> = {
       if (res.option === 1) {
         announce(g, res, `${n(g, t)} must pay the King 100 and pledge loyalty`);
         take(g, res.actor, t, 100, src(res), king);
-        ask(g, res, { kind: 'speech', title: 'Pledge your loyalty', text: `Pledge your loyalty to ${n(g, king)}.`, who: [t], speech: `I pledge my loyalty to you, ${n(g, king)}, my King.`, allowCustom: true, ms: g.config.speechMs });
+        speak(g, res, {
+          title: 'Pledge your loyalty', text: `Pledge your loyalty to ${n(g, king)}.`, who: [t], line: `I pledge my loyalty to you, ${n(g, king)}, my King.`, allowCustom: true,
+          instruction: `${n(g, t)} must pledge their loyalty to ${n(g, king)}.`,
+        });
         return;
       }
       announce(g, res, `${n(g, t)} decides who pays`);

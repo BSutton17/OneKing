@@ -11,6 +11,7 @@ export const NEGOTIATION_RECEIVE_LIMIT = 400; // Rules p14
 export const OFFICIAL_NEGOTIATION_MS = 2 * 60_000; // Rules p13
 
 export const DEFAULT_CONFIG: GameConfig = {
+  mode: 'inPerson',
   negotiationMs: OFFICIAL_NEGOTIATION_MS,
   diceMode: 'digital',
   kingCheck: 'onChange',

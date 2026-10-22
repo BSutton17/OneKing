@@ -38,7 +38,7 @@ export function PlayerList({ room, name, onSelect }: { room: RoomView; name: Nam
                   </span>
                 )}
                 {g.phase === 'negotiation' && p.negotiationDone && <span className="tag">✓ done</span>}
-                {tags.map((t) => <span key={t.text} className={`tag${t.warn ? ' warn' : ''}`}>{t.text}</span>)}
+                {tags.map((t, i) => <span key={`${i}-${t.text}`} className={`tag${t.warn ? ' warn' : ''}`}>{t.text}</span>)}
               </span>
             </span>
             <span className="pgold">{p.gold}</span>
@@ -50,7 +50,7 @@ export function PlayerList({ room, name, onSelect }: { room: RoomView; name: Nam
 }
 
 export function PlayerSheet({ room, id, name, onClose, onMessage, onOffer }: {
-  room: RoomView; id: PlayerId; name: NameOf; onClose: () => void; onMessage: (id: PlayerId) => void; onOffer: (id: PlayerId) => void;
+  room: RoomView; id: PlayerId; name: NameOf; onClose: () => void; onMessage?: (id: PlayerId) => void; onOffer: (id: PlayerId) => void;
 }) {
   const g: GameView = room.game!;
   const p = g.players.find((x) => x.id === id)!;
@@ -65,7 +65,7 @@ export function PlayerSheet({ room, id, name, onClose, onMessage, onOffer }: {
       <div style={{ maxWidth: 260, margin: '12px auto 0' }}>
         <MoneyTracker role={p.role} gold={p.gold} />
       </div>
-      {tags.length > 0 && <div className="chips">{tags.map((t) => <span key={t.text} className={`tag${t.warn ? ' warn' : ''}`}>{t.text}</span>)}</div>}
+      {tags.length > 0 && <div className="chips">{tags.map((t, i) => <span key={`${i}-${t.text}`} className={`tag${t.warn ? ' warn' : ''}`}>{t.text}</span>)}</div>}
       {p.faceDown.length > 0 && (
         <>
           <p className="section-title">Face down in front of {me ? 'you' : p.name}</p>
@@ -89,12 +89,36 @@ export function PlayerSheet({ room, id, name, onClose, onMessage, onOffer }: {
           Free {name(s.debtor)}: pay {name(s.creditor)} 200
         </button>
       ))}
-      {!me && (
+      {!me && (onMessage || g.negotiation) && (
         <div className="row">
-          <button className="btn ghost grow" onClick={() => onMessage(id)}>Message privately</button>
-          {g.negotiation && <button className="btn gold grow" onClick={() => onOffer(id)}>Offer a deal</button>}
+          {onMessage && <button className="btn ghost grow" onClick={() => onMessage(id)}>Message privately</button>}
+          {g.negotiation && <button className="btn gold grow" onClick={() => onOffer(id)}>{g.mode === 'inPerson' ? 'Trade' : 'Offer a deal'}</button>}
         </div>
       )}
+      <button className="btn dark block" onClick={onClose}>Close</button>
+    </Sheet>
+  );
+}
+
+/** Everyone's official character card with their token — the whole table's gold at a glance. */
+export function AllGoldSheet({ g, onClose }: { g: GameView; onClose: () => void }) {
+  const byId = new Map(g.players.map((p) => [p.id, p]));
+  const order = g.turnOrder.map((t) => byId.get(t.playerId)!);
+  return (
+    <Sheet onClose={onClose} label="Everyone's gold" wide>
+      <h2>Everyone's gold</h2>
+      <p className="faint center" style={{ fontSize: '.75rem' }}>Every token moves by itself when gold changes — check it any time.</p>
+      <div className="gold-grid">
+        {order.map((p) => (
+          <figure key={p.id} className={`gold-tile${p.role === 'king' ? ' is-king' : ''}`}>
+            <MoneyTracker role={p.role} gold={p.gold} caption={false} />
+            <figcaption>
+              <span className="pname">{p.role === 'king' && <Crown />}{p.name}{p.id === g.you ? ' (you)' : ''}</span>
+              <span className="pgold">{p.gold}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
       <button className="btn dark block" onClick={onClose}>Close</button>
     </Sheet>
   );

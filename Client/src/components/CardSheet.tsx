@@ -38,7 +38,9 @@ export function CardSheet({ card, name, isKing, onClose }: { card: HandCard; nam
 
   return (
     <Sheet onClose={onClose} label={def.name}>
-      <div className="big-card"><CardImg def={def} small={false} /></div>
+      <div className="split">
+      <div className="split-art"><div className="big-card"><CardImg def={def} small={false} /></div></div>
+      <div className="split-body">
       <h2>{def.name}</h2>
       {!def.options && <p className="printed">{def.printedText}</p>}
       {def.timing && <p className="faint center" style={{ fontSize: '.78rem' }}>⏳ {def.timing}</p>}
@@ -86,6 +88,8 @@ export function CardSheet({ card, name, isKing, onClose }: { card: HandCard; nam
         </section>
       )}
       <button className="btn dark block" onClick={onClose}>Close</button>
+      </div>
+      </div>
     </Sheet>
   );
 }

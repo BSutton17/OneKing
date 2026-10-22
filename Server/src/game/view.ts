@@ -58,6 +58,7 @@ export function viewFor(g: GameState, pid: PlayerId) {
   return {
     you: pid,
     version: g.version,
+    mode: g.config.mode,
     serverNow: Date.now(),
     round: g.round,
     phase: g.phase,
@@ -102,7 +103,8 @@ export function viewFor(g: GameState, pid: PlayerId) {
             .filter((o) => o.from === pid || o.to === pid)
             .map((o) => ({
               ...o,
-              giveCardKey: o.giveCard ? g.cards[o.giveCard].key : null,
+              // a card offered in a swap stays face down until the swap happens: players can lie (Rules p14)
+              giveCardKey: o.giveCard && o.from === pid ? g.cards[o.giveCard].key : null,
               discardCardKey: o.discardCard ? g.cards[o.discardCard].key : null,
               // the recipient never needs the proposer's card ids
               giveCard: o.from === pid ? o.giveCard : null,

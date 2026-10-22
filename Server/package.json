@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Authoritative Socket.IO server for One King One Crown",
   "license": "CC-BY-NC-SA-4.0",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
     "build": "tsc",
@@ -17,7 +19,6 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "mongoose": "^8.19.0",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

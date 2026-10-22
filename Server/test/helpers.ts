@@ -9,9 +9,10 @@ import { viewFor } from '../src/game/view.js';
 
 export const T0 = 1_700_000_000_000;
 
+/** Engine tests default to virtual mode (spoken lines are prompts); pass mode: 'inPerson' to test that. */
 export function newGame(n = 5, opts: { seed?: number; config?: Partial<GameConfig> } = {}) {
   const players = Array.from({ length: n }, (_, i) => ({ id: `p${i}`, name: `P${i}` }));
-  return createGame(players, { seed: opts.seed ?? 1, now: T0, config: opts.config });
+  return createGame(players, { seed: opts.seed ?? 1, now: T0, config: { mode: 'virtual', ...opts.config } });
 }
 
 /** Apply or throw (tests that expect success). */

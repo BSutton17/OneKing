@@ -97,7 +97,7 @@ export interface LogEntry {
   id: string;
   t: number;
   round: number;
-  kind: 'info' | 'play' | 'gold' | 'dice' | 'crown' | 'round' | 'phase' | 'speech' | 'private' | 'deal' | 'over';
+  kind: 'info' | 'play' | 'gold' | 'dice' | 'crown' | 'round' | 'phase' | 'speech' | 'say' | 'private' | 'deal' | 'over';
   text: string;
   actor?: PlayerId;
   cardKey?: string;
@@ -117,6 +117,7 @@ export interface Transaction {
 
 export interface GameView {
   you: PlayerId;
+  mode: 'inPerson' | 'virtual';
   version: number;
   serverNow: number;
   round: number;
@@ -154,7 +155,7 @@ export interface RoomView {
   code: string;
   status: 'lobby' | 'playing' | 'over';
   hostId: PlayerId;
-  settings: { negotiationSeconds: number; diceMode: 'digital' | 'physical' };
+  settings: { mode: 'inPerson' | 'virtual'; negotiationSeconds: number; diceMode: 'digital' | 'physical' };
   you: PlayerId;
   members: { id: PlayerId; name: string; connected: boolean; since: number }[];
   limits: { min: number; max: number };

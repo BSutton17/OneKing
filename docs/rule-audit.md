@@ -87,7 +87,7 @@ front before the card resolves).
 * **C9 Sub Rosa (King).** On a 4+ the King picks one card from the hand he looked at to discard (not the Royal Bomb); the victim draws a replacement.
 * **C10 Anchor.** The King picks the target Noble and "the player of your choice" up front; the target chooses which happens.
 * **C11 Allies, Grudge, Loyalty, Tithe, Debt Collector, Bend the Knee, Royal Parrot, We Ride Together** — the other player's decision is a prompt with a timeout default: Allies → you gain 100; Grudge → disagree; Loyalty → they pay you; Tithe / Debt Collector → a random eligible player; Bend the Knee → thank; Royal Parrot → repeat; We Ride Together → no split.
-* **C12 Spoken/social cards** (Actors, Council Meeting's praise, Loyalty's pledge, Loyal Dog, Bend the Knee, Royal Parrot). The digital equivalent of saying it aloud: the player taps (or types) their line and it is posted to the table's chat as a highlighted "speech". Loyal Dog's gold is paid whether or not they speak. Actors has no gold effect, so nobody is forced to respond.
+* **C12 Spoken/social cards** (Actors, Council Meeting's praise, Loyalty's pledge, Loyal Dog, Bend the Knee, Royal Parrot). In person they are said out loud (M1). Online, the player taps (or types) their line and it is posted to the table as a highlighted "speech". Loyal Dog's gold is paid whether or not they speak. Actors has no gold effect, so nobody is forced to respond.
 * **C13 Isolation vs looking.** "Look at your cards" covers your hand and face-down cards in front of you.
 * **C14 Shifting Tides** restricts only the two named Nobles as takers; other players may still take from them.
 * **C15 Royal Bomb** can be given away only as one side of a 1-for-1 card exchange (rule 17) or discarded as part of an accepted deal, both during negotiation. It's discarded before the hand swap when its holder becomes King.
@@ -95,6 +95,13 @@ front before the card resolves).
 * **C17 Icarus "if you can afford it"** = you have at least 100 × (number of other Nobles).
 * **C18 Unprotected** removes face-down cards in front of every player except you; removed cards are discarded unrevealed.
 
+### Same room vs apart (host setting)
+
+* **M1 — In person (default).** Players talk out loud, so there is no chat. Spoken-line cards (C12) show an instruction on every phone ("📣 Bob must say: …") and do not wait; the Royal Parrot's sentence is spoken by the King, not typed. Anything that changes the game state stays a button: votes, Betrayal support, King Maker, dice, and choices that cost gold (refusing Bend the Knee or the Parrot).
+* **M2 — In-person trading.** Negotiation is verbal; the phones only record what physically changes hands: give gold, swap a card (1-for-1), discard a card as part of a deal. Each needs the other player's confirmation. Multi-part deals are separate handovers, so — exactly as at a real table — either side can renege halfway (Rules p14: no deal is binding).
+* **M3 — Virtual.** Table chat, private messages, combined deal offers, and spoken lines as speech bubbles.
+* **M4 — Swapped cards stay face down** until the swap happens, in both modes: the rules let players lie about what they're offering. A card discarded as part of a deal is shown, since discards are put down openly.
+
 ### Things the digital edition adds (not rules)
 
-Room codes, reconnect tokens, the response timeouts above, the "Done negotiating" early finish, in-room chat, and the optional physical-dice mode.
+4-digit room codes, reconnect tokens, the 💰 everyone's-gold view, the response timeouts above, the "Done negotiating" early finish, in-room chat, and the optional physical-dice mode.

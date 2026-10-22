@@ -123,7 +123,7 @@ export function acceptOffer(g: GameState, by: PlayerId, offerId: unknown, cardId
     if (!c) continue;
     removeFromHand(g, who, c);
     discard(g, c);
-    parts.push(`${nameOf(g, who)} discards a card`);
+    parts.push(`${nameOf(g, who)} discards ${cardDef(g.cards[c].key).name}`); // discards go down face up (M4)
     refill(g, who);
   }
   g.negotiation!.offers = offers.filter((x) => x !== o && !touches(x, o, card, disc));

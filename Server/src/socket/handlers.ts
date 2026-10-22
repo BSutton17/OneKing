@@ -3,16 +3,16 @@
 // Client -> server (each takes a payload object and an ack callback; the ack
 // gets { ok: true, ... } or { ok: false, error }):
 //   room:create   { name }                       new private room; you are host
-//   room:join     { name, code }                 join a lobby by its 5-letter code
+//   room:join     { name, code }                 join a lobby by its 4-digit code
 //   room:resume   { token }                      re-attach after a refresh / dropped connection
 //   room:leave    {}
-//   room:settings { negotiationSeconds?, diceMode? }   host, lobby
+//   room:settings { mode?, negotiationSeconds?, diceMode? }   host, lobby (mode: inPerson | virtual)
 //   room:seat     { playerId, dir: -1 | 1 }      host, lobby: move a seat
 //   room:kick     { playerId }                   host, lobby
 //   room:start    {}                             host, lobby, 4-8 players
 //   room:lobby    {}                             host, after the game
 //   game:action   { actionId, type, ... }        see game/engine.ts Action
-//   chat:send     { to: playerId | null, text }  null = everyone
+//   chat:send     { to: playerId | null, text }  null = everyone; virtual games only
 //
 // Server -> client:
 //   server:hello  { cards }      the card catalog (text, art paths), once per connection

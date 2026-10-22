@@ -6,7 +6,7 @@ import { canTake, take } from '../protection.js';
 import { ask, choiceOf, pickOf, rollOf, voteOf } from '../prompts.js';
 import { allIds, log, nameOf, nextId, nobleIds, seatFrom } from '../state.js';
 import type { GameState, PlayerId, Prompt, Resolution } from '../types.js';
-import { amountField, announce, lookable, playerField, say, src, target } from './kit.js';
+import { amountField, announce, lookable, playerField, say, speak, src, target } from './kit.js';
 import type { CardHandler } from './types.js';
 
 const n = (g: GameState, id: PlayerId) => nameOf(g, id);
@@ -69,7 +69,8 @@ export const kingCards: Record<string, CardHandler> = {
       if (choiceOf(p, t) === 'refuse') {
         say(g, `${n(g, t)} refuses to thank the King`);
         bankLoss(g, t, 300, src(res));
-      } else log(g, 'speech', `Thank you, my King, for everything you've done for me.`, { actor: t });
+      } else if (g.config.mode === 'inPerson') log(g, 'say', `📣 ${n(g, t)} must thank ${n(g, res.actor)} for everything they've done for them.`, { actor: t });
+      else log(g, 'speech', `Thank you, my King, for everything you've done for me.`, { actor: t });
     },
   },
 
@@ -114,7 +115,10 @@ export const kingCards: Record<string, CardHandler> = {
       const t = target(res);
       announce(g, res, `${n(g, t)} gets ${res.setup.amount}`);
       bankGain(g, t, Number(res.setup.amount), src(res));
-      ask(g, res, { kind: 'speech', title: 'Loyal Dog', text: 'You must say:', who: [t], speech: 'Thank you my king, I pledge my loyalty to you my king.', ms: g.config.speechMs });
+      speak(g, res, {
+        title: 'Loyal Dog', text: 'You must say:', who: [t], line: 'Thank you my king, I pledge my loyalty to you my king.',
+        instruction: `${n(g, t)} must say: “Thank you my king, I pledge my loyalty to you my king.”`,
+      });
     },
   },
 
@@ -145,14 +149,20 @@ export const kingCards: Record<string, CardHandler> = {
   },
 
   royal_parrot: {
-    fields: (g) => [playerField(g, 'target', 'Who is your parrot?', nobleIds(g)), { name: 'sentence', kind: 'text', label: 'The sentence they must repeat', maxLength: 120 }],
+    // in person the King says the sentence out loud, so there is nothing to type
+    fields: (g) => [
+      playerField(g, 'target', 'Who is your parrot?', nobleIds(g)),
+      ...(g.config.mode === 'virtual' ? [{ name: 'sentence', kind: 'text' as const, label: 'The sentence they must repeat', maxLength: 120 }] : []),
+    ],
     start(g, res) {
       const t = target(res);
       announce(g, res, `${n(g, t)} is the royal parrot`);
       bankLoss(g, t, 100, src(res));
       ask(g, res, {
         kind: 'choice', title: 'Royal Parrot', who: [t], defaultValue: 'repeat', ms: g.config.responseMs,
-        text: `Repeat in a high-pitched voice: "${res.setup.sentence}" — or refuse and pay the bank 300.`,
+        text: res.setup.sentence
+          ? `Repeat in a high-pitched voice: "${res.setup.sentence}" — or refuse and pay the bank 300.`
+          : `Repeat ${n(g, res.actor)}'s sentence out loud in a high-pitched voice — or refuse and pay the bank 300.`,
         options: [{ value: 'repeat', label: 'Repeat it 🦜' }, { value: 'refuse', label: 'Refuse (pay 300)' }],
       });
     },
@@ -161,7 +171,8 @@ export const kingCards: Record<string, CardHandler> = {
       if (choiceOf(p, t) === 'refuse') {
         say(g, `${n(g, t)} refuses to repeat it`);
         bankLoss(g, t, 300, src(res));
-      } else log(g, 'speech', `🦜 ${String(res.setup.sentence).toUpperCase()}`, { actor: t });
+      } else if (res.setup.sentence) log(g, 'speech', `🦜 ${String(res.setup.sentence).toUpperCase()}`, { actor: t });
+      else log(g, 'say', `🦜 ${n(g, t)} repeats the King's sentence in a high-pitched voice`, { actor: t });
     },
   },
 

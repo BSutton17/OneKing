@@ -2,33 +2,19 @@ import { useState } from 'react';
 import { BackImg } from '../components/common';
 import { Credits } from '../components/Credits';
 import type { RoomView } from '../lib/types';
-import { api, toast } from '../net/socket';
+import { api } from '../net/socket';
 
 export function Lobby({ room }: { room: RoomView }) {
   const isHost = room.hostId === room.you;
   const n = room.members.length;
   const enough = n >= room.limits.min && n <= room.limits.max;
   const [busy, setBusy] = useState(false);
-  const link = `${location.origin}${location.pathname}?room=${room.code}`;
-
-  const share = async () => {
-    try {
-      if (navigator.share) await navigator.share({ title: 'One King One Crown', text: `Join my game — room ${room.code}`, url: link });
-      else {
-        await navigator.clipboard.writeText(link);
-        toast('Invite link copied', 'info');
-      }
-    } catch {
-      /* cancelled */
-    }
-  };
-
   return (
     <main className="screen">
       <div style={{ width: 84 }}><BackImg deck="king" /></div>
       <p className="section-title">Room code</p>
       <div className="room-code" aria-label={`Room code ${room.code.split('').join(' ')}`}>{room.code}</div>
-      <button className="btn ghost small" onClick={share}>Share invite</button>
+      <p className="faint center" style={{ fontSize: '.8rem' }}>Friends enter this code on the home screen.</p>
 
       <section className="panel stack" style={{ width: '100%' }}>
         <h2>Seats {n}/{room.limits.max}</h2>
@@ -56,6 +42,19 @@ export function Lobby({ room }: { room: RoomView }) {
 
       <section className="panel stack" style={{ width: '100%' }}>
         <h3>Table rules</h3>
+        <p className="section-title">Where is everyone?</p>
+        <div className="chips" role="radiogroup" aria-label="Game mode">
+          {([['inPerson', '🪑 Same room'], ['virtual', '🌐 Apart (online)']] as const).map(([m, label]) => (
+            <button key={m} role="radio" aria-checked={room.settings.mode === m} className={`chip${room.settings.mode === m ? ' on' : ''}`} disabled={!isHost} onClick={() => api.settings({ mode: m })}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <p className="faint center" style={{ fontSize: '.78rem', lineHeight: 1.45 }}>
+          {room.settings.mode === 'inPerson'
+            ? 'In person: no chat — you negotiate, plot and say your lines out loud. Phones handle cards, gold, dice and votes.'
+            : 'Online: chat with the table or privately, send full deal offers, and spoken cards become speech bubbles.'}
+        </p>
         <p className="section-title">Negotiation time</p>
         <div className="chips" role="radiogroup" aria-label="Negotiation time">
           {[60, 120, 180, 300].map((s) => (

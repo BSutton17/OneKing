@@ -41,7 +41,9 @@ export function NowPanel({ g, name, onAnswer }: { g: GameView; name: NameOf; onA
       <section className="panel center stack">
         <h2>Negotiation Phase</h2>
         <Countdown deadline={g.negotiation.endsAt} className="timer" />
-        <p className="muted" style={{ fontSize: '.85rem' }}>Make deals in the Deals tab. {done}/{g.players.length} done.</p>
+        <p className="muted" style={{ fontSize: '.85rem' }}>
+          {g.mode === 'inPerson' ? 'Talk it out! Record handovers in the Trade tab.' : 'Make deals in the Deals tab.'} {done}/{g.players.length} done.
+        </p>
       </section>
     );
   }

@@ -1,12 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { RoomManager, type Room, type SavedRoom } from '../src/rooms/roomManager.js';
+import { RoomManager } from '../src/rooms/roomManager.js';
 import { T0 } from './helpers.js';
 
 function setup(n = 4) {
   let now = T0;
   const kicked: string[] = [];
-  const saved = new Map<string, SavedRoom>();
   // fake timers: callbacks are collected and run by hand
   let timerSeq = 0;
   const pending = new Map<number, () => void>();
@@ -21,7 +20,6 @@ function setup(n = 4) {
     now: () => now,
     timers: { setTimeout: setT, clearTimeout: clearT },
     onKick: (id) => kicked.push(id),
-    onPersist: (r) => ('deleted' in r ? saved.delete(r.code) : saved.set(r.code, structuredClone(r))),
     seed: () => 99,
   });
   const host = m.create({ socketId: 's0', name: 'Ann' });
@@ -36,24 +34,35 @@ function setup(n = 4) {
   }
   const room = () => m.rooms.get(host.code)!;
   const sock = (pid: string) => `s${ids.indexOf(pid)}`;
-  return { m, code: host.code, tokens, ids, room, sock, kicked, saved, runTimers, advance: (ms: number) => (now += ms), nowOf: () => now };
+  return { m, code: host.code, tokens, ids, room, sock, kicked, runTimers, advance: (ms: number) => (now += ms), nowOf: () => now };
 }
 
 let actionSeq = 0;
 const aid = () => `a${++actionSeq}`;
 
 describe('lobby', () => {
-  test('room codes are 5 unambiguous letters; joining is case-insensitive', () => {
+  test('room codes are 4 digits; spaces are ignored when joining', () => {
     const { m, code } = setup(1);
-    assert.match(code, /^[A-HJ-NP-Z]{5}$/);
-    const j = m.join({ socketId: 'x', name: 'Zed', code: code.toLowerCase() });
+    assert.match(code, /^\d{4}$/);
+    const j = m.join({ socketId: 'x', name: 'Zed', code: ` ${code.slice(0, 2)} ${code.slice(2)} ` });
     assert.ok(j.ok);
+  });
+
+  test('a new room is in person by default; the host can switch it to virtual', () => {
+    const { m, room } = setup(4);
+    assert.equal(room().settings.mode, 'inPerson');
+    assert.equal(m.settings('s1', { mode: 'virtual' }).ok, false, 'only the host');
+    assert.ok(m.settings('s0', { mode: 'virtual' }).ok);
+    m.start('s0');
+    assert.equal(room().game!.config.mode, 'virtual');
   });
 
   test('clear errors for a missing name, an unknown code, a full room and a started game', () => {
     const { m, code } = setup(8);
     assert.deepEqual(m.join({ socketId: 'x', name: '', code }), { ok: false, error: 'Please enter your name' });
-    assert.match((m.join({ socketId: 'x', name: 'Zed', code: 'QQQQQ' }) as { error: string }).error, /No room/);
+    assert.match((m.join({ socketId: 'x', name: 'Zed', code: 'ABCD' }) as { error: string }).error, /4 digits/);
+    const unused = code === '0000' ? '0001' : '0000';
+    assert.match((m.join({ socketId: 'x', name: 'Zed', code: unused }) as { error: string }).error, /No room/);
     assert.match((m.join({ socketId: 'x', name: 'Zed', code }) as { error: string }).error, /full/);
     const small = setup(4);
     assert.ok(small.m.start('s0').ok);
@@ -99,8 +108,14 @@ describe('private information', () => {
     }
   });
 
+  test('in-person rooms have no chat: you talk at the table', () => {
+    const { m } = setup(4);
+    assert.match((m.chat('s0', { text: 'hello' }) as { error: string }).error, /out loud/);
+  });
+
   test('private messages reach only the two players; public ones reach everyone', () => {
     const { m, room, ids } = setup(4);
+    m.settings('s0', { mode: 'virtual' });
     assert.ok(m.chat('s0', { to: ids[1], text: 'psst, ally with me' }).ok);
     assert.ok(m.chat('s2', { to: null, text: 'hello table' }).ok);
     const seen = (pid: string) => m.view(room(), pid).chat.map((c) => c.text);
@@ -112,6 +127,7 @@ describe('private information', () => {
 
   test('chat is length-limited and rate-limited', () => {
     const { m, room, advance } = setup(4);
+    m.settings('s0', { mode: 'virtual' });
     assert.ok(m.chat('s0', { text: 'x'.repeat(1000) }).ok);
     assert.equal(room().chat[0].text.length, 300);
     assert.match((m.chat('s0', { text: 'again' }) as { error: string }).error, /Slow down/);
@@ -160,7 +176,7 @@ describe('actions', () => {
   });
 });
 
-describe('connections, timers and restarts', () => {
+describe('connections and timers', () => {
   test('reconnecting with the token restores the same seat; a bad token is refused', () => {
     const { m, room, tokens, ids } = setup(4);
     m.start('s0');
@@ -254,19 +270,5 @@ describe('connections, timers and restarts', () => {
     m.fire(room().code);
     assert.notEqual(room().game!.turn!.playerId, k);
     assert.equal(room().game!.players[k].hand.length, 8);
-  });
-
-  test('after a server restart the saved room comes back: same game, same hands, tokens still work', () => {
-    const first = setup(4);
-    first.m.start('s0');
-    const before: Room = structuredClone(first.room());
-    const saved = [...first.saved.values()];
-    const second = new RoomManager({ now: () => first.nowOf() });
-    second.restore(saved);
-    const room = second.rooms.get(first.code)!;
-    assert.deepEqual(room.game!.players, before.game!.players);
-    assert.deepEqual(room.game!.decks, before.game!.decks, 'no reshuffle on restore');
-    assert.ok(room.members.every((x) => !x.connected));
-    assert.ok(second.resume({ socketId: 'back', token: first.tokens[2] }).ok);
   });
 });

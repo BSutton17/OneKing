@@ -7,6 +7,9 @@ export type DeckName = 'king' | 'noble';
 export type Phase = 'playing' | 'negotiation' | 'over';
 
 export interface GameConfig {
+  // inPerson: everyone is at the same table and talks out loud (no chat, no typed speeches);
+  // virtual: remote play with chat, private messages and speech bubbles
+  mode: 'inPerson' | 'virtual';
   negotiationMs: number; // official: 2 minutes (Rules p13)
   diceMode: 'digital' | 'physical'; // physical = rollers type the number they rolled (A18)
   kingCheck: 'onChange' | 'continuous'; // see docs/rule-audit.md A1
@@ -168,7 +171,8 @@ export interface LogEntry {
   id: string;
   t: number;
   round: number;
-  kind: 'info' | 'play' | 'gold' | 'dice' | 'crown' | 'round' | 'phase' | 'speech' | 'private' | 'deal' | 'over';
+  // speech = a line a player typed (virtual); say = an instruction to speak out loud (in person)
+  kind: 'info' | 'play' | 'gold' | 'dice' | 'crown' | 'round' | 'phase' | 'speech' | 'say' | 'private' | 'deal' | 'over';
   text: string;
   to?: PlayerId[]; // private entry: only these players see it
   actor?: PlayerId;

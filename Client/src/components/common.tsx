@@ -34,7 +34,7 @@ export function BackImg({ deck }: { deck: Role | 'character' }) {
   );
 }
 
-export function Sheet({ onClose, children, label }: { onClose?: () => void; children: ReactNode; label: string }) {
+export function Sheet({ onClose, children, label, wide }: { onClose?: () => void; children: ReactNode; label: string; wide?: boolean }) {
   useEffect(() => {
     if (!onClose) return;
     const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -43,7 +43,7 @@ export function Sheet({ onClose, children, label }: { onClose?: () => void; chil
   }, [onClose]);
   return (
     <div className="sheet-backdrop" onClick={(e) => e.target === e.currentTarget && onClose?.()}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={label}>
+      <div className={`sheet${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-label={label}>
         <div className="sheet-handle" />
         {children}
       </div>

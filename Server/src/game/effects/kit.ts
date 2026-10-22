@@ -2,6 +2,7 @@
 
 import { cardDef } from '../../cards/catalog.js';
 import { canLook, canTake } from '../protection.js';
+import { ask } from '../prompts.js';
 import { log, nameOf } from '../state.js';
 import type { GameState, PlayerId, Resolution } from '../types.js';
 import type { FieldSpec } from './types.js';
@@ -30,3 +31,16 @@ export function announce(g: GameState, res: Resolution, detail = ''): void {
 }
 
 export const say = (g: GameState, text: string) => log(g, 'info', text);
+
+/**
+ * A card makes players say something. Virtual: each of them gets a prompt and
+ * their line is posted to the table. In person: they say it out loud — every
+ * screen shows the instruction and the game doesn't wait (C12).
+ */
+export function speak(g: GameState, res: Resolution, o: { who: PlayerId[]; line: string; instruction: string; title: string; text: string; allowCustom?: boolean }): void {
+  if (g.config.mode === 'inPerson') {
+    log(g, 'say', `📣 ${o.instruction}`, { actor: o.who.length === 1 ? o.who[0] : undefined });
+    return;
+  }
+  ask(g, res, { kind: 'speech', title: o.title, text: o.text, who: o.who, speech: o.line, allowCustom: o.allowCustom, ms: g.config.speechMs });
+}

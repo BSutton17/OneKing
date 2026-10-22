@@ -1,23 +1,12 @@
-import path from 'node:path';
-import { FileStore, MongoStore, type RoomStore } from './persistence/store.js';
 import { createServer } from './server.js';
 
 const port = Number(process.env.PORT) || 3001;
 // default '*': no cookies are used, and phones on your Wi-Fi load the client from your LAN address
-const origins = (process.env.CLIENT_ORIGINS || '*').split(',').map((s) => s.trim()).filter(Boolean);
+// browsers send an origin without a trailing slash, so "https://x.app/" must match "https://x.app"
+const origins = (process.env.CLIENT_ORIGINS || '*').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean);
 const clientOrigins = origins.includes('*') ? '*' : origins;
 
-let store: RoomStore;
-if (process.env.MONGODB_URI) {
-  store = await MongoStore.connect(process.env.MONGODB_URI);
-  console.log('Saving rooms to MongoDB');
-} else {
-  const dir = path.resolve(process.env.DATA_DIR || './data');
-  store = new FileStore(dir);
-  console.log(`Saving rooms to ${dir}`);
-}
-
-const server = await createServer({ clientOrigins, store });
+const server = createServer({ clientOrigins });
 server.httpServer.listen(port, () => console.log(`One King One Crown server listening on :${port}`));
 
 const shutdown = async () => {

@@ -1,7 +1,8 @@
 // Owns every room: the lobby and its seats, who is connected, the game state,
 // chat, timers and saving. It knows nothing about socket.io — the socket layer
 // calls these methods and re-broadcasts whenever `onChange` fires — which keeps
-// it testable with fake timers.
+// it testable with fake timers. Rooms live in memory only: a refresh or a phone
+// that slept reconnects to its seat with the token its browser kept.
 
 import { randomInt, randomUUID } from 'node:crypto';
 import { MAX_PLAYERS, MIN_PLAYERS, OFFICIAL_NEGOTIATION_MS } from '../game/config.js';
@@ -9,15 +10,16 @@ import { applyAction, createGame, endNegotiationEarly, nextDeadline, skipTurn, t
 import type { GameState, PlayerId } from '../game/types.js';
 import { viewFor } from '../game/view.js';
 
-const CODE_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I / O
-const CODE_LENGTH = 5;
+// Room codes are 4-digit numbers, 0000-9999 (as in Overlord)
+const CODE_DIGITS = 4;
+const CODE_SPACE = 10 ** CODE_DIGITS;
 const MAX_NAME = 16;
 const MAX_CHAT = 300;
 const CHAT_KEEP = 400;
 const RECENT_ACTIONS = 60;
 
 export interface ChatMessage { id: string; from: PlayerId; to: PlayerId | null; text: string; t: number }
-export interface Settings { negotiationSeconds: number; diceMode: 'digital' | 'physical' }
+export interface Settings { mode: 'inPerson' | 'virtual'; negotiationSeconds: number; diceMode: 'digital' | 'physical' }
 
 export interface Member {
   id: PlayerId;
@@ -43,8 +45,6 @@ export interface Room {
   chatSeq: number;
 }
 
-export type SavedRoom = Omit<Room, 'members'> & { members: Omit<Member, 'socketId' | 'connected'>[] };
-
 type Ok<T = object> = ({ ok: true } & T) | { ok: false; error: string };
 
 export interface ManagerOptions {
@@ -52,7 +52,6 @@ export interface ManagerOptions {
   timers?: { setTimeout: typeof setTimeout; clearTimeout: typeof clearTimeout };
   onChange?: (room: Room) => void;
   onKick?: (socketId: string, reason: string) => void;
-  onPersist?: (room: SavedRoom | { code: string; deleted: true }) => void;
   lobbySeatGraceMs?: number; // a disconnected lobby member keeps their seat this long
   abandonedRoomMs?: number; // a room with nobody connected is deleted after this
   seed?: () => number; // game seeds (tests)
@@ -63,9 +62,9 @@ export function normalizeName(raw: unknown): string {
 }
 
 export function normalizeCode(raw: unknown): string | null {
-  if (typeof raw !== 'string') return null;
-  const code = raw.toUpperCase().replace(/[^A-Z]/g, '');
-  return code.length === CODE_LENGTH ? code : null;
+  if (typeof raw !== 'string' && typeof raw !== 'number') return null;
+  const code = String(raw).replace(/\s+/g, '');
+  return /^\d{4}$/.test(code) ? code : null;
 }
 
 export class RoomManager {
@@ -78,7 +77,6 @@ export class RoomManager {
   private t: NonNullable<ManagerOptions['timers']>;
   onChange: (room: Room) => void;
   onKick: (socketId: string, reason: string) => void;
-  onPersist: NonNullable<ManagerOptions['onPersist']>;
   private lobbySeatGraceMs: number;
   private abandonedRoomMs: number;
   private seed: () => number | undefined;
@@ -88,7 +86,6 @@ export class RoomManager {
     this.t = opts.timers ?? { setTimeout, clearTimeout };
     this.onChange = opts.onChange ?? (() => {});
     this.onKick = opts.onKick ?? (() => {});
-    this.onPersist = opts.onPersist ?? (() => {});
     this.lobbySeatGraceMs = opts.lobbySeatGraceMs ?? 60_000;
     this.abandonedRoomMs = opts.abandonedRoomMs ?? 6 * 60 * 60_000;
     this.seed = opts.seed ?? (() => undefined);
@@ -121,7 +118,7 @@ export class RoomManager {
     const now = this.now();
     const room: Room = {
       code, hostId: '', status: 'lobby', members: [], game: null, chat: [], createdAt: now, updatedAt: now, chatSeq: 0,
-      settings: { negotiationSeconds: OFFICIAL_NEGOTIATION_MS / 1000, diceMode: 'digital' },
+      settings: { mode: 'inPerson', negotiationSeconds: OFFICIAL_NEGOTIATION_MS / 1000, diceMode: 'digital' },
     };
     this.rooms.set(code, room);
     const m = this.addMember(room, socketId, clean);
@@ -135,7 +132,7 @@ export class RoomManager {
     if (!clean) return { ok: false, error: 'Please enter your name' };
     const c = normalizeCode(code);
     const room = c ? this.rooms.get(c) : undefined;
-    if (!room) return { ok: false, error: `No room with code ${String(code ?? '').toUpperCase() || '—'}` };
+    if (!room) return { ok: false, error: c ? `No room with code ${c}` : 'Room codes are 4 digits, like 0427' };
     if (room.status !== 'lobby') return { ok: false, error: 'That game has already started' };
     if (room.members.length >= MAX_PLAYERS) return { ok: false, error: `That room is full (${MAX_PLAYERS} players)` };
     this.leave(socketId);
@@ -223,10 +220,14 @@ export class RoomManager {
 
   // ---- lobby (host only) ----------------------------------------------------------------
 
-  settings(socketId: string, input: { negotiationSeconds?: unknown; diceMode?: unknown }): Ok {
+  settings(socketId: string, input: { mode?: unknown; negotiationSeconds?: unknown; diceMode?: unknown }): Ok {
     const h = this.host(socketId);
     if (typeof h === 'string') return { ok: false, error: h };
     const s = h.room.settings;
+    if (input.mode !== undefined) {
+      if (input.mode !== 'inPerson' && input.mode !== 'virtual') return { ok: false, error: 'Unknown mode' };
+      s.mode = input.mode;
+    }
     if (input.negotiationSeconds !== undefined) {
       const v = Number(input.negotiationSeconds);
       if (![60, 120, 180, 300].includes(v)) return { ok: false, error: 'Pick 1, 2 (official), 3 or 5 minutes' };
@@ -273,7 +274,7 @@ export class RoomManager {
     room.members.forEach((m) => this.clearSeatTimer(m.id));
     room.game = createGame(room.members.map((m) => ({ id: m.id, name: m.name })), {
       now: this.now(), seed: this.seed(),
-      config: { negotiationMs: room.settings.negotiationSeconds * 1000, diceMode: room.settings.diceMode },
+      config: { mode: room.settings.mode, negotiationMs: room.settings.negotiationSeconds * 1000, diceMode: room.settings.diceMode },
     });
     room.status = 'playing';
     room.members.forEach((m) => (m.recentActions = []));
@@ -317,6 +318,7 @@ export class RoomManager {
     const found = this.where(socketId);
     if (!found) return { ok: false, error: 'You are not in a room' };
     const { room, member } = found;
+    if (room.settings.mode === 'inPerson') return { ok: false, error: "You're at the same table — say it out loud!" };
     const text = typeof input.text === 'string' ? input.text.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, MAX_CHAT) : '';
     if (!text) return { ok: false, error: 'Say something' };
     const to = input.to === null || input.to === undefined || input.to === '' ? null : String(input.to);
@@ -410,24 +412,6 @@ export class RoomManager {
     else this.schedule(room);
   }
 
-  // ---- saving & restoring ---------------------------------------------------------------------
-
-  serialize(room: Room): SavedRoom {
-    return { ...room, members: room.members.map(({ socketId: _s, connected: _c, ...m }) => m) };
-  }
-
-  /** Put saved rooms back after a restart: everyone starts disconnected, timers re-arm. */
-  restore(saved: SavedRoom[]): void {
-    for (const s of saved) {
-      if (!s?.code || this.rooms.has(s.code)) continue;
-      const now = this.now();
-      const room: Room = { ...s, members: s.members.map((m) => ({ ...m, socketId: null, connected: false, since: now })) };
-      this.rooms.set(room.code, room);
-      for (const m of room.members) this.sessions.set(m.token, { code: room.code, playerId: m.id });
-      this.schedule(room);
-    }
-  }
-
   /** Delete rooms nobody has been connected to for a long time (call periodically). */
   sweep(): void {
     const now = this.now();
@@ -459,7 +443,6 @@ export class RoomManager {
     room.updatedAt = this.now();
     if (this.schedule(room)) return;
     this.onChange(room);
-    this.onPersist(this.serialize(room));
   }
 
   private deleteRoom(code: string) {
@@ -474,15 +457,17 @@ export class RoomManager {
       if (m.socketId) this.sockets.delete(m.socketId);
     }
     this.rooms.delete(code);
-    this.onPersist({ code, deleted: true });
   }
 
+  /** A random free 4-digit code (walks on from a random start when nearly full). */
   private newCode(): string {
-    for (;;) {
-      let code = '';
-      for (let i = 0; i < CODE_LENGTH; i++) code += CODE_LETTERS[randomInt(CODE_LETTERS.length)];
+    if (this.rooms.size >= CODE_SPACE) throw new Error('Every room code is in use');
+    const start = randomInt(CODE_SPACE);
+    for (let k = 0; k < CODE_SPACE; k++) {
+      const code = String((start + k) % CODE_SPACE).padStart(CODE_DIGITS, '0');
       if (!this.rooms.has(code)) return code;
     }
+    throw new Error('Every room code is in use');
   }
 
   private setSeatTimer(id: string, ms: number, fn: () => void) {

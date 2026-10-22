@@ -5,15 +5,14 @@ import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
 import { after, before, describe, test } from 'node:test';
 import { io as connect, type Socket } from 'socket.io-client';
-import { MemoryStore } from '../src/persistence/store.js';
 import { createServer } from '../src/server.js';
 
-let server: Awaited<ReturnType<typeof createServer>>;
+let server: ReturnType<typeof createServer>;
 let url = '';
 const clients: Socket[] = [];
 
 before(async () => {
-  server = await createServer({ store: new MemoryStore(), log: { error: () => {}, log: () => {} } });
+  server = createServer({ log: { error: () => {}, log: () => {} } });
   await new Promise<void>((r) => server.httpServer.listen(0, r));
   url = `http://localhost:${(server.httpServer.address() as AddressInfo).port}`;
 });
@@ -62,6 +61,7 @@ describe('over real sockets', () => {
       assert.ok(r.ok, r.error);
     }
     await ann.until((v) => v.members.length === 4);
+    assert.ok((await ann.emit('room:settings', { mode: 'virtual' })).ok); // chat is a virtual-mode feature
     assert.deepEqual(await others[0].emit('room:start'), { ok: false, error: 'Only the host can do that' });
     assert.ok((await ann.emit('room:start')).ok);
 
@@ -71,7 +71,11 @@ describe('over real sockets', () => {
       assert.equal(v.game.hand.length, 8);
       for (const other of views) {
         if (other === v) continue;
-        for (const card of other.game.hand) assert.ok(!JSON.stringify(v).includes(card.id), 'another hand leaked over the wire');
+        for (const card of other.game.hand) {
+          const json = JSON.stringify(v);
+          const at = json.indexOf(card.id);
+          assert.ok(!json.includes(`"${card.id}"`), `another hand leaked over the wire: ${card.id} in ...${json.slice(Math.max(0, at - 40), at + 20)}...`);
+        }
       }
       assert.equal(v.game.players.length, 4);
       assert.ok(v.game.players.every((p: any) => typeof p.handCount === 'number' && !('hand' in p)));

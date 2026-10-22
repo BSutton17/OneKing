@@ -20,3 +20,11 @@ for (let n = 4; n <= 8; n++) {
 test('random games also finish with continuous crown checks and physical dice timing out', () => {
   for (let seed = 1; seed <= 6; seed++) playRandomGame(6, seed, { kingCheck: 'continuous' });
 });
+
+test('random in-person games (spoken lines are said out loud, nothing waits for them) run to a winner', () => {
+  for (let n = 4; n <= 8; n += 2) for (let seed = 1; seed <= 6; seed++) {
+    const g = playRandomGame(n, seed, { mode: 'inPerson' });
+    assert.equal(g.phase, 'over');
+    assert.ok(!g.log.some((e) => e.kind === 'speech'), 'no typed speeches in person');
+  }
+});

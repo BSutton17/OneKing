@@ -10,7 +10,7 @@ const SERVER_URL: string = import.meta.env.VITE_SERVER_URL || `${location.protoc
 const SESSION_KEY = 'okoc.session';
 const NAME_KEY = 'okoc.name';
 
-export interface Toast { id: number; text: string; tone: 'error' | 'info' | 'speech'; who?: string }
+export interface Toast { id: number; text: string; tone: 'error' | 'info' | 'speech' | 'say'; who?: string }
 
 interface Store {
   connected: boolean;
@@ -45,7 +45,7 @@ let toastSeq = 0;
 export function toast(text: string, tone: Toast['tone'] = 'error', who?: string) {
   const t = { id: ++toastSeq, text, tone, who };
   set({ toasts: [...state.toasts, t].slice(-4) });
-  setTimeout(() => set({ toasts: state.toasts.filter((x) => x.id !== t.id) }), tone === 'speech' ? 5000 : 3500);
+  setTimeout(() => set({ toasts: state.toasts.filter((x) => x.id !== t.id) }), tone === 'speech' || tone === 'say' ? 6000 : 3500);
 }
 
 // ---- session -------------------------------------------------------------------------
@@ -151,7 +151,7 @@ export const api = {
     clearSession();
     set({ room: null });
   },
-  settings: (s: { negotiationSeconds?: number; diceMode?: string }) => run(emit('room:settings', s)),
+  settings: (s: { mode?: string; negotiationSeconds?: number; diceMode?: string }) => run(emit('room:settings', s)),
   seat: (playerId: string, dir: -1 | 1) => run(emit('room:seat', { playerId, dir })),
   kick: (playerId: string) => run(emit('room:kick', { playerId })),
   start: () => run(emit('room:start')),

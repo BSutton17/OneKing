@@ -2,26 +2,18 @@ import http from 'node:http';
 import cors from 'cors';
 import express from 'express';
 import { Server } from 'socket.io';
-import { saver, type RoomStore } from './persistence/store.js';
 import { RoomManager, type ManagerOptions } from './rooms/roomManager.js';
 import { attachHandlers } from './socket/handlers.js';
 
-export async function createServer({
+export function createServer({
   clientOrigins = '*' as string | string[],
-  store,
   manager: managerOptions = {},
   log = console,
-}: { clientOrigins?: string | string[]; store?: RoomStore; manager?: ManagerOptions; log?: Pick<Console, 'error' | 'log'> } = {}) {
+}: { clientOrigins?: string | string[]; manager?: ManagerOptions; log?: Pick<Console, 'error' | 'log'> } = {}) {
   const app = express();
   app.use(cors({ origin: clientOrigins }));
 
-  const save = store ? saver(store, log) : null;
-  const manager = new RoomManager({ ...managerOptions, onPersist: (r) => save?.push(r) });
-  if (store) {
-    const saved = await store.loadAll();
-    manager.restore(saved);
-    if (saved.length) log.log(`Restored ${saved.length} room(s)`);
-  }
+  const manager = new RoomManager(managerOptions);
   const sweeper = setInterval(() => manager.sweep(), 60_000);
   sweeper.unref();
 
@@ -31,7 +23,7 @@ export async function createServer({
   app.get('/health', (_req, res) => {
     res.json({ ok: true, ...manager.stats() });
   });
-  // keep-awake ping for sleeping hosts (see client keepAwake.ts)
+  // the client pings this during a game so a Heroku eco dyno doesn't fall asleep
   app.get('/ping', (_req, res) => {
     res.set('Cache-Control', 'no-store').json({ ok: true, t: Date.now() });
   });
@@ -47,8 +39,6 @@ export async function createServer({
     clearInterval(sweeper);
     manager.dispose();
     await new Promise<void>((resolve) => io.close(() => resolve()));
-    await save?.flush();
-    await store?.close?.();
   };
 
   return { app, httpServer, io, manager, close };

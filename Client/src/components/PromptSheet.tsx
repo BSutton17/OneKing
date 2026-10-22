@@ -26,7 +26,9 @@ export function PromptSheet({ g, prompt, name, diceMode, onHide }: { g: GameView
         <span className="section-title" style={{ margin: 0 }}>{res.kind === 'rolloff' ? 'Crown roll-off' : `${name(res.actor)} played`}</span>
         <Countdown deadline={prompt.deadline} />
       </div>
-      {res.cardKey && <div style={{ width: 110, margin: '0 auto' }}><CardImg cardKey={res.cardKey} small={false} /></div>}
+      <div className="split">
+      {res.cardKey && <div className="split-art"><div className="prompt-card"><CardImg cardKey={res.cardKey} small={false} /></div></div>}
+      <div className="split-body">
       <h2>{prompt.title}</h2>
       <p className="center" style={{ lineHeight: 1.45 }}>{prompt.text}</p>
 
@@ -122,6 +124,8 @@ export function PromptSheet({ g, prompt, name, diceMode, onHide }: { g: GameView
       )}
 
       <button className="btn dark block" onClick={onHide}>Hide for now</button>
+      </div>
+      </div>
     </Sheet>
   );
 }
