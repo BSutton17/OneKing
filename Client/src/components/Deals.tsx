@@ -68,13 +68,15 @@ export function IncomingOfferSheet({ g, offer, name, onLater }: { g: GameView; o
       <OfferLines o={offer} g={g} name={name} />
       {offer.askCard && <CardPicker g={g} label="Pick the card you give back (you'll see theirs after the swap)" value={give} onChange={setGive} exclude={toss} />}
       {offer.askDiscard && <CardPicker g={g} label="Pick the card you discard (you draw a replacement)" value={toss} onChange={setToss} exclude={give} />}
-      <div className="row">
-        <button className="btn gold grow" disabled={!ready || busy} onClick={() => send({ type: 'acceptOffer', offerId: offer.id, cardId: give, discardId: toss })}>
-          {offer.giveGold && !offer.askCard && !offer.askGold ? 'Take it' : 'Accept'}
-        </button>
-        <button className="btn ghost grow" disabled={busy} onClick={() => send({ type: 'declineOffer', offerId: offer.id })}>Refuse</button>
+      <div className="sheet-actions">
+        <div className="row">
+          <button className="btn gold grow" disabled={!ready || busy} onClick={() => send({ type: 'acceptOffer', offerId: offer.id, cardId: give, discardId: toss })}>
+            {offer.giveGold && !offer.askCard && !offer.askGold ? 'Take it' : 'Accept'}
+          </button>
+          <button className="btn ghost grow" disabled={busy} onClick={() => send({ type: 'declineOffer', offerId: offer.id })}>Refuse</button>
+        </div>
+        <button className="btn dark block" onClick={onLater}>Later</button>
       </div>
-      <button className="btn dark block" onClick={onLater}>Later</button>
     </Sheet>
   );
 }
@@ -227,10 +229,12 @@ function TradeSheet({ g, kind, name, onClose }: { g: GameView; kind: TradeKind; 
       {them && kind !== 'gold' && (
         <CardPicker g={g} label={kind === 'swap' ? 'Your card (they only see it after the swap)' : 'The card you discard (you draw a replacement)'} value={card} onChange={setCard} />
       )}
-      <button className="btn gold block" disabled={!ready} onClick={send}>
-        {kind === 'gold' ? `Give ${gold} gold${them ? ` to ${them.name}` : ''}` : kind === 'swap' ? 'Ask to swap' : 'Ask them to confirm'}
-      </button>
-      <button className="btn dark block" onClick={onClose}>Cancel</button>
+      <div className="sheet-actions">
+        <button className="btn gold block" disabled={!ready} onClick={send}>
+          {kind === 'gold' ? `Give ${gold} gold${them ? ` to ${them.name}` : ''}` : kind === 'swap' ? 'Ask to swap' : 'Ask them to confirm'}
+        </button>
+        <button className="btn dark block" onClick={onClose}>Cancel</button>
+      </div>
     </Sheet>
   );
 }
@@ -299,13 +303,17 @@ export function OfferSheet({ g, name, initialTo, onClose }: { g: GameView; name:
           <label className="row center" style={{ fontSize: '.85rem' }}>
             <input type="checkbox" checked={askDiscard} onChange={(e) => setAskDiscard(e.target.checked)} /> They discard a card of their choice
           </label>
+        </>
+      )}
+      <div className="sheet-actions">
+        {them && (
           <button className="btn gold block" disabled={empty} onClick={async () => {
             const r = await api.act({ type: 'offer', to: them.id, giveGold, askGold, giveCard, askCard: Boolean(giveCard), discardCard, askDiscard });
             if (r.ok) onClose();
           }}>Send offer</button>
-        </>
-      )}
-      <button className="btn dark block" onClick={onClose}>Cancel</button>
+        )}
+        <button className="btn dark block" onClick={onClose}>Cancel</button>
+      </div>
     </Sheet>
   );
 }

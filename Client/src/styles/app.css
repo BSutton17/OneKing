@@ -285,7 +285,7 @@ p { margin: 0; }
   .game-title { font-size: 2.1rem; }
   .lobby-crown { width: 56px; }
   .room-code { font-size: 2.1rem; }
-  .sheet { max-height: 96dvh; max-width: 780px; padding: 12px 16px calc(12px + var(--safe-bottom)); }
+  .sheet { --pad-b: calc(12px + var(--safe-bottom)); max-height: 96dvh; max-width: 780px; padding: 12px 16px var(--pad-b); }
   .sheet-handle { display: none; }
   .split { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; align-items: start; }
   .split-art { position: sticky; top: 0; }
@@ -345,11 +345,18 @@ button.card { border: 0; padding: 0; cursor: pointer; }
 /* ---- sheets / prompts ---------------------------------------------------------------------- */
 .sheet-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 40; display: flex; align-items: flex-end; justify-content: center; animation: fade 0.15s ease-out; }
 .sheet {
-  width: 100%; max-width: 560px; max-height: 92dvh; overflow-y: auto;
-  background: var(--panel); border-radius: 20px 20px 0 0; padding: 18px 16px calc(18px + var(--safe-bottom));
+  --pad-b: calc(18px + var(--safe-bottom));
+  width: 100%; max-width: 560px; max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--panel); border-radius: 20px 20px 0 0; padding: 18px 16px var(--pad-b);
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6); animation: rise 0.2s ease-out;
 }
 .sheet > * + * { margin-top: 12px; }
+/* the buttons that finish a long sheet stay pinned to its bottom edge */
+.sheet-actions {
+  position: sticky; bottom: calc(-1 * var(--pad-b)); z-index: 2; display: grid; gap: 8px;
+  margin: 12px -16px calc(-1 * var(--pad-b)); padding: 10px 16px var(--pad-b);
+  background: var(--panel); border-top: 1px solid var(--line);
+}
 .sheet-handle { width: 44px; height: 5px; border-radius: 3px; background: var(--panel-3); margin: -6px auto 4px; }
 @media (min-width: 700px) {
   .sheet-backdrop { align-items: center; }

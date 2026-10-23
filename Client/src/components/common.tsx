@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { backSrc, publicUrl } from '../lib/art';
 import type { CardDef, Role } from '../lib/types';
 import { useStore } from '../net/socket';
@@ -44,13 +45,16 @@ export function Sheet({ onClose, children, label, wide }: { onClose?: () => void
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
   }, [onClose]);
-  return (
+  // rendered on <body>: a sheet opened from inside a scrolling pane must not be
+  // clipped by it or end up under the bottom dock (iOS)
+  return createPortal(
     <div className="sheet-backdrop" onClick={(e) => e.target === e.currentTarget && onClose?.()}>
       <div className={`sheet${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-label={label}>
         <div className="sheet-handle" />
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
