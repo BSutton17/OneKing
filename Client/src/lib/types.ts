@@ -47,6 +47,7 @@ export interface PlayerView {
   handCount: number;
   receivedInNegotiation: number;
   negotiationDone: boolean;
+  out: boolean; // removed from the game by the host
   faceDown: { slot: string; placedBy: PlayerId; deck: Role; cardKey: string | null }[];
 }
 

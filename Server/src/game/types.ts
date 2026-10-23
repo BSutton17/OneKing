@@ -41,6 +41,7 @@ export interface PlayerState {
   hand: string[]; // card ids
   receivedInNegotiation: number; // gold received through deals this negotiation phase (Rules p14)
   negotiationDone: boolean; // pressed "Done negotiating" (A15)
+  out: boolean; // removed from the game by the host (A17)
 }
 
 /** A card lying face down in front of a player, claimed to be a Knight. */
@@ -233,6 +234,7 @@ export interface GameState {
   faceDown: FaceDown[];
   statuses: Status[];
   claims: Claim[];
+  away: PlayerId[]; // offline for a while (kept up to date by the room layer, A17)
   resolution: Resolution | null;
   negotiation: { endsAt: number; offers: Offer[] } | null;
   // after negotiation: settle this round's predictions, then start the next round / end the game

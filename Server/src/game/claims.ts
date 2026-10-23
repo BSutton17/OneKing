@@ -12,8 +12,8 @@ import { randomIndex } from './rng.js';
 import { fail, log, nameOf, nextId, others, plural } from './state.js';
 import type { Claim, GameState, PlayerId } from './types.js';
 
-/** Who must agree to overrule `c`: everyone but the speaker. */
-export const overrulers = (g: GameState, c: Claim): PlayerId[] => others(g, c.by);
+/** Who must agree to overrule `c`: everyone but the speaker, leaving out anyone who is away (A17). */
+export const overrulers = (g: GameState, c: Claim): PlayerId[] => others(g, c.by).filter((id) => !g.away.includes(id));
 
 /** Log a spoken line. In person it becomes a claim the table can overrule. */
 export function claim(g: GameState, o: { by: PlayerId; cardKey: string; text: string; penalty: string; undo: Claim['undo'] }): void {
@@ -50,7 +50,8 @@ export function voteOverrule(g: GameState, pid: PlayerId, claimId: unknown, vote
 export function settleClaims(g: GameState): boolean {
   let changed = false;
   for (const c of g.claims) {
-    if (!c.open || !overrulers(g, c).every((id) => c.votes.includes(id))) continue;
+    const voters = overrulers(g, c);
+    if (!c.open || !voters.length || !voters.every((id) => c.votes.includes(id))) continue;
     c.open = false;
     c.overruled = true;
     changed = true;

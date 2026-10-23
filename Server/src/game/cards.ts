@@ -37,6 +37,7 @@ export function draw(g: GameState, playerId: PlayerId, count: number): number {
 /** Top a hand back up to 8 (Rules p15: "always have at least 8 cards"). */
 export function refill(g: GameState, playerId: PlayerId): void {
   const p = g.players[playerId];
+  if (p.out) return;
   const missing = HAND_SIZE - p.hand.length;
   if (missing > 0) {
     const n = draw(g, playerId, missing);

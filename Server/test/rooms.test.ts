@@ -261,6 +261,54 @@ describe('connections and timers', () => {
     assert.notEqual(room().game!.turn!.playerId, k);
   });
 
+  test("the host can skip someone else's turn, but not their own", () => {
+    const { m, room, sock, ids } = setup(5);
+    m.start('s0');
+    const turn = () => room().game!.turn!.playerId;
+    for (let guard = 0; guard < 10 && turn() === ids[0]; guard++) {
+      assert.match((m.hostSkipTurn('s0', ids[0]) as { error: string }).error, /end your turn/);
+      const g = room().game!;
+      m.act('s0', { actionId: aid(), type: 'place', cardId: g.players[ids[0]].hand[0], targetId: g.seats.find((x) => x !== ids[0]) });
+    }
+    const k = turn();
+    const other = ids.find((id) => id !== k && id !== ids[0])!;
+    assert.match((m.hostSkipTurn(sock(other), k) as { error: string }).error, /Only the host/);
+    assert.match((m.hostSkipTurn('s0', other) as { error: string }).error, /isn't their turn/);
+    assert.ok(m.hostSkipTurn('s0', k).ok);
+    assert.notEqual(room().game!.turn!.playerId, k);
+    assert.ok(room().game!.log.some((e) => /The host skips .+'s turn/.test(e.text)));
+  });
+
+  test('the host can remove a player from the game; they can watch but not act', () => {
+    const { m, room, sock, ids } = setup(5);
+    m.start('s0');
+    const gone = ids[2];
+    assert.match((m.hostRemove(sock(ids[1]), gone) as { error: string }).error, /Only the host/);
+    assert.match((m.hostRemove('s0', ids[0]) as { error: string }).error, /yourself/);
+    assert.ok(m.hostRemove('s0', gone).ok);
+    assert.equal(room().game!.players[gone].out, true);
+    assert.equal(room().members.length, 5, 'still in the room');
+    assert.equal(m.view(room(), gone).game!.players.find((p) => p.id === gone)!.out, true);
+    assert.match((m.act(sock(gone), { actionId: aid(), type: 'endTurn' }) as { error: string }).error, /removed/);
+  });
+
+  test('after 60 seconds offline a player is marked away, and a host who is away hands the host role on', () => {
+    const { m, room, ids, advance, tokens } = setup(4);
+    m.start('s0');
+    m.disconnect('s0');
+    m.disconnect('s2');
+    advance(59_000);
+    m.fire(room().code);
+    assert.deepEqual(room().game!.away, []);
+    assert.equal(room().hostId, ids[0]);
+    advance(2_000);
+    m.fire(room().code);
+    assert.deepEqual([...room().game!.away].sort(), [ids[0], ids[2]].sort());
+    assert.equal(room().hostId, ids[1]);
+    m.resume({ socketId: 'back', token: tokens[2] });
+    assert.deepEqual(room().game!.away, [ids[0]]);
+  });
+
   test('a player skipped mid-turn still ends with 8 cards (Rules p15)', () => {
     const { m, room, sock, advance } = setup(5);
     m.start('s0');

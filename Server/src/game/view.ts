@@ -72,7 +72,7 @@ export function viewFor(g: GameState, pid: PlayerId) {
       const p = g.players[id];
       return {
         id, name: p.name, seat: p.seat, role: p.role, gold: p.gold, handCount: p.hand.length,
-        receivedInNegotiation: p.receivedInNegotiation, negotiationDone: p.negotiationDone,
+        receivedInNegotiation: p.receivedInNegotiation, negotiationDone: p.negotiationDone, out: p.out,
         faceDown: g.faceDown
           .filter((f) => f.protectedId === id)
           .map((f) => ({

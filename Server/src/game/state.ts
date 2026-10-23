@@ -24,12 +24,12 @@ export const nameOf = (g: GameState, id: PlayerId | 'bank'): string => (id === '
 
 export const kingOf = (g: GameState): PlayerState => g.players[g.seats[g.kingSeat]];
 
-/** Every player, in seat order. */
-export const allIds = (g: GameState): PlayerId[] => [...g.seats];
+/** Every player still in the game (not removed by the host, A17), in seat order. */
+export const allIds = (g: GameState): PlayerId[] => g.seats.filter((id) => !g.players[id].out);
 
-export const nobleIds = (g: GameState): PlayerId[] => g.seats.filter((id) => g.players[id].role === 'noble');
+export const nobleIds = (g: GameState): PlayerId[] => allIds(g).filter((id) => g.players[id].role === 'noble');
 
-export const others = (g: GameState, id: PlayerId): PlayerId[] => g.seats.filter((x) => x !== id);
+export const others = (g: GameState, id: PlayerId): PlayerId[] => allIds(g).filter((x) => x !== id);
 
 export const otherNobles = (g: GameState, id: PlayerId): PlayerId[] => nobleIds(g).filter((x) => x !== id);
 

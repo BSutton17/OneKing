@@ -64,7 +64,7 @@ export interface OfferInput {
 export function makeOffer(g: GameState, from: PlayerId, input: OfferInput): void {
   assertOpen(g);
   const to = typeof input.to === 'string' ? input.to : '';
-  if (!g.players[to] || to === from) fail('Pick another player to deal with');
+  if (!g.players[to] || to === from || g.players[to].out) fail('Pick another player to deal with');
   const giveGold = input.giveGold ?? 0;
   const askGold = input.askGold ?? 0;
   if (!isAmount(giveGold) || !isAmount(askGold)) fail('Gold amounts go in steps of 100');

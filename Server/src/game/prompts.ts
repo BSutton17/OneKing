@@ -102,33 +102,39 @@ function parse(g: GameState, res: Resolution, prompt: Prompt, playerId: PlayerId
   }
 }
 
-/** The deadline passed: fill in the documented defaults (see rule audit). */
-export function expire(g: GameState, prompt: Prompt): void {
-  for (const id of prompt.who) {
+/**
+ * The deadline passed: fill in the documented defaults (see rule audit).
+ * `only`: just these players (someone who left the game answers at once, A17).
+ */
+export function expire(g: GameState, prompt: Prompt, only?: PlayerId[]): void {
+  for (const id of only ?? prompt.who) {
     if (prompt.responses[id]) continue;
     if (typeof prompt.need === 'number' && isComplete(prompt)) break;
     const who = nameOf(g, id);
+    const late = g.players[id]?.out ? 'has left the game' : "didn't answer in time";
     switch (prompt.kind) {
       case 'choice': {
         const opt = prompt.options?.find((o) => o.value === prompt.defaultValue && !o.disabled) ?? prompt.options?.find((o) => !o.disabled);
         if (opt) {
           prompt.responses[id] = { kind: 'choice', value: opt.value };
-          log(g, 'info', `${who} didn't answer in time: "${opt.label}"`);
+          log(g, 'info', `${who} ${late}: "${opt.label}"`);
         }
         break;
       }
       case 'player': {
-        const pool = (prompt.players ?? []).filter((p) => !prompt.notSelf || p !== id);
+        const all = (prompt.players ?? []).filter((p) => !prompt.notSelf || p !== id);
+        const live = all.filter((p) => !g.players[p]?.out);
+        const pool = live.length ? live : all;
         const pick = prompt.defaultValue && pool.includes(prompt.defaultValue) ? prompt.defaultValue : pool[randomIndex(g, pool.length)];
         if (pick) {
           prompt.responses[id] = { kind: 'player', playerId: pick };
-          log(g, 'info', `${who} didn't answer in time: ${nameOf(g, pick)} was picked at random`);
+          log(g, 'info', `${who} ${late}: ${nameOf(g, pick)} was picked at random`);
         }
         break;
       }
       case 'vote':
         prompt.responses[id] = { kind: 'vote', yes: false };
-        log(g, 'info', `${who} didn't vote in time (counted as no)`);
+        log(g, 'info', `${who} ${g.players[id]?.out ? 'has left the game' : "didn't vote in time"} (counted as no)`);
         break;
       case 'support':
         prompt.responses[id] = { kind: 'support', declined: true };

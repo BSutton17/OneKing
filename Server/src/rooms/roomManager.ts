@@ -6,7 +6,7 @@
 
 import { randomInt, randomUUID } from 'node:crypto';
 import { MAX_PLAYERS, MIN_PLAYERS, OFFICIAL_NEGOTIATION_MS } from '../game/config.js';
-import { applyAction, createGame, endNegotiationEarly, nextDeadline, skipTurn, tick, type Action } from '../game/engine.js';
+import { applyAction, createGame, endNegotiationEarly, nextDeadline, removePlayer, setAway, skipTurn, tick, type Action } from '../game/engine.js';
 import type { GameState, PlayerId } from '../game/types.js';
 import { viewFor } from '../game/view.js';
 
@@ -116,6 +116,14 @@ export class RoomManager {
     if (found.room.hostId !== found.member.id) return 'Only the host can do that';
     if (found.room.status !== 'lobby') return 'The game has already started';
     return found;
+  }
+
+  private gameHost(socketId: string): { room: Room; member: Member; game: GameState } | string {
+    const found = this.where(socketId);
+    if (!found) return 'You are not in a room';
+    if (found.room.hostId !== found.member.id) return 'Only the host can do that';
+    if (found.room.status !== 'playing' || !found.room.game) return 'The game is not running';
+    return { ...found, game: found.room.game };
   }
 
   // ---- joining & leaving ----------------------------------------------------------
@@ -326,6 +334,33 @@ export class RoomManager {
     return { ok: true };
   }
 
+  /** Host: skip the turn of a player who has walked away from the table (A17). */
+  hostSkipTurn(socketId: string, playerId: unknown): Ok {
+    const h = this.gameHost(socketId);
+    if (typeof h === 'string') return { ok: false, error: h };
+    const g = h.game;
+    if (g.phase !== 'playing' || !g.turn) return { ok: false, error: 'Nobody is taking a turn right now' };
+    if (g.turn.playerId !== playerId) return { ok: false, error: "It isn't their turn any more" };
+    if (playerId === h.member.id) return { ok: false, error: 'Play your cards or end your turn' };
+    if (g.resolution) return { ok: false, error: 'Wait until the current card is resolved' };
+    const next = skipTurn(g, this.now(), `The host skips ${g.players[playerId].name}'s turn`);
+    if (!next) return { ok: false, error: "Their turn can't be skipped right now" };
+    this.setGame(h.room, next);
+    return { ok: true };
+  }
+
+  /** Host: remove a player from the game for good (A17). They can still watch. */
+  hostRemove(socketId: string, playerId: unknown): Ok {
+    const h = this.gameHost(socketId);
+    if (typeof h === 'string') return { ok: false, error: h };
+    if (playerId === h.member.id) return { ok: false, error: "You can't remove yourself" };
+    if (typeof playerId !== 'string' || !h.game.players[playerId]) return { ok: false, error: 'Unknown player' };
+    const r = removePlayer(h.game, playerId, this.now());
+    if (!r.ok) return r;
+    this.setGame(h.room, r.state);
+    return { ok: true };
+  }
+
   chat(socketId: string, input: { to?: unknown; text?: unknown }): Ok {
     const found = this.where(socketId);
     if (!found) return { ok: false, error: 'You are not in a room' };
@@ -381,9 +416,22 @@ export class RoomManager {
     if (room.status !== 'playing' || !g) return false;
     const now = this.now();
 
-    // A15: every connected player is done negotiating
+    // A17: players offline for a while don't hold up an overrule (C20), and can't keep the host role
+    const awayAt = (m: Member) => m.since + g.config.disconnectedTurnMs;
+    const away = room.members.filter((m) => !m.connected && now >= awayAt(m)).map((m) => m.id);
+    if (away.includes(room.hostId)) {
+      const heir = room.members.find((m) => m.connected && !g.players[m.id]?.out);
+      if (heir) room.hostId = heir.id;
+    }
+    const marked = setAway(g, away, now);
+    if (marked) {
+      this.setGame(room, marked);
+      return true;
+    }
+
+    // A15: every connected player still in the game is done negotiating
     if (g.phase === 'negotiation' && g.negotiation && !g.resolution) {
-      const online = room.members.filter((m) => m.connected);
+      const online = room.members.filter((m) => m.connected && !g.players[m.id]?.out);
       if (online.length && online.every((m) => g.players[m.id]?.negotiationDone)) {
         const next = endNegotiationEarly(g, now);
         if (next) {
@@ -395,6 +443,7 @@ export class RoomManager {
     const due: number[] = [];
     const deadline = nextDeadline(g);
     if (deadline !== null) due.push(deadline);
+    for (const m of room.members) if (!m.connected && now < awayAt(m)) due.push(awayAt(m));
     // A17: a disconnected player's turn is skipped after a while
     if (g.phase === 'playing' && g.turn && !g.resolution) {
       const m = room.members.find((x) => x.id === g.turn!.playerId);

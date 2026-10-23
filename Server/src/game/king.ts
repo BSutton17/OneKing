@@ -57,7 +57,7 @@ export function crown(g: GameState, newKingId: PlayerId, opts: { swapGold?: bool
 /** Run the gold check (A1). Returns true if it crowned someone or started a roll-off. */
 export function crownCheck(g: GameState): boolean {
   const king = kingOf(g);
-  const pool = g.config.kingCheck === 'continuous' || g.kingLostGold ? nobleIds(g) : g.goldRisers.filter((id) => g.players[id].role === 'noble');
+  const pool = g.config.kingCheck === 'continuous' || g.kingLostGold ? nobleIds(g) : g.goldRisers.filter((id) => g.players[id].role === 'noble' && !g.players[id].out);
   g.goldRisers = [];
   g.kingLostGold = false;
   const richer = pool.filter((id) => g.players[id].gold > king.gold);

@@ -13,6 +13,7 @@ import { discard, draw, refill, removeFromHand } from './cards.js';
 import { closeClaims, settleClaims, voteOverrule } from './claims.js';
 import { HAND_SIZE, MAX_PLAYERS, MIN_PLAYERS, ROUNDS, START_GOLD, makeConfig } from './config.js';
 import { handlerFor, handlerForKey } from './effects/index.js';
+import { settleLeavers } from './leaving.js';
 import type { FieldSpec } from './effects/types.js';
 import { bankGain, bankLoss, transfer } from './gold.js';
 import { crownCheck } from './king.js';
@@ -21,7 +22,7 @@ import { acceptOffer, cancelOffer, declineOffer, makeOffer } from './negotiation
 import { take } from './protection.js';
 import { expire, isComplete, respond } from './prompts.js';
 import { randomIndex, seedRng, shuffle } from './rng.js';
-import { RuleError, fail, kingOf, log, nameOf, nextId, nobleIds, seatFrom } from './state.js';
+import { RuleError, allIds, fail, kingOf, log, nameOf, nextId, nobleIds, seatFrom } from './state.js';
 import type { GameConfig, GameState, PlayerId, Resolution, Setup } from './types.js';
 
 export type Action =
@@ -51,7 +52,7 @@ export function createGame(seated: { id: PlayerId; name: string }[], opts: { con
     players: {}, seats: seated.map((p) => p.id), kingSeat: 0,
     round: 1, phase: 'playing', direction: 1, turnOrder: [], turn: null, nextTurnIndex: 0, turnNo: 0,
     cards: {}, decks: { king: [], noble: [] }, discard: { king: [], noble: [] },
-    faceDown: [], statuses: [], claims: [], resolution: null, negotiation: null, roundEnd: null,
+    faceDown: [], statuses: [], claims: [], away: [], resolution: null, negotiation: null, roundEnd: null,
     goldRisers: [], kingLostGold: false, log: [], transactions: [], winner: null, actionId: 'setup', now,
   };
 
@@ -59,7 +60,7 @@ export function createGame(seated: { id: PlayerId; name: string }[], opts: { con
   g.kingSeat = randomIndex(g, seated.length);
   seated.forEach((p, seat) => {
     const role = seat === g.kingSeat ? 'king' : 'noble';
-    g.players[p.id] = { id: p.id, name: p.name, seat, role, gold: START_GOLD[role], hand: [], receivedInNegotiation: 0, negotiationDone: false };
+    g.players[p.id] = { id: p.id, name: p.name, seat, role, gold: START_GOLD[role], hand: [], receivedInNegotiation: 0, negotiationDone: false, out: false };
   });
 
   // build both decks; card ids come from a shuffled pool so an id says nothing about the card
@@ -97,6 +98,7 @@ export function applyAction(state: GameState, playerId: PlayerId, action: Action
   g.actionId = ctx.actionId ?? nextId(g, 'a');
   try {
     if (!g.players[playerId]) fail('You are not in this game');
+    if (g.players[playerId].out) fail('You have been removed from this game');
     if (g.phase === 'over') fail('The game is over');
     dispatch(g, playerId, action);
     advance(g);
@@ -164,16 +166,61 @@ export function endNegotiationEarly(state: GameState, now: number): GameState | 
   return g;
 }
 
-/** Room layer: the current player has been disconnected too long — skip their turn (A17). */
-export function skipTurn(state: GameState, now: number): GameState | null {
+/**
+ * Room layer: skip the current player's turn — they have been disconnected too
+ * long, or the host skipped it (A17). `why` is the log line.
+ */
+export function skipTurn(state: GameState, now: number, why?: string): GameState | null {
   if (state.phase !== 'playing' || !state.turn || state.resolution) return null;
   const g = structuredClone(state);
   g.now = now;
-  log(g, 'info', `${nameOf(g, g.turn!.playerId)} is disconnected — their turn is skipped`);
+  log(g, 'info', why ?? `${nameOf(g, g.turn!.playerId)} is disconnected — their turn is skipped`);
   finishTurn(g, true);
   advance(g);
   g.version += 1;
   return g;
+}
+
+/** Room layer: who has been offline for a while (A17). Returns null if that hasn't changed. */
+export function setAway(state: GameState, away: PlayerId[], now: number): GameState | null {
+  const ids = away.filter((id) => state.players[id]);
+  if (ids.length === state.away.length && ids.every((id) => state.away.includes(id))) return null;
+  const g = structuredClone(state);
+  g.now = now;
+  g.actionId = nextId(g, 'a');
+  g.away = ids;
+  advance(g); // fewer people need to agree to overrule a spoken line (C20)
+  g.version += 1;
+  return g;
+}
+
+/**
+ * Room layer: the host removes a player for good (A17). Whatever they still
+ * have to answer is answered with the defaults, and from now on their turns are
+ * skipped and nobody can pick them. Their cards, gold and effects go once no
+ * card is being resolved; if they were King, the richest Noble takes the crown.
+ */
+export function removePlayer(state: GameState, pid: PlayerId, now: number): Result {
+  const g = structuredClone(state);
+  g.now = now;
+  g.actionId = nextId(g, 'a');
+  try {
+    const p = g.players[pid];
+    if (!p) fail('Unknown player');
+    if (g.phase === 'over') fail('The game is over');
+    if (p.out) fail(`${p.name} has already left the game`);
+    if (allIds(g).length <= 3) fail('At least 3 players have to stay in the game');
+    if (p.role === 'king' && g.resolution) fail('Wait until the current card is resolved — the crown has to pass on');
+    p.out = true;
+    if (g.negotiation) g.negotiation.offers = g.negotiation.offers.filter((o) => o.from !== pid && o.to !== pid);
+    log(g, 'info', `${p.name} has been removed from the game: their turns are skipped and their cards, gold and effects are gone${p.role === 'king' ? '. The richest Noble takes the crown' : ''}`, { actor: pid });
+    advance(g);
+  } catch (err) {
+    if (err instanceof RuleError) return { ok: false, error: err.message };
+    throw err;
+  }
+  g.version += 1;
+  return { ok: true, state: g };
 }
 
 // ---- the state machine ------------------------------------------------------------
@@ -184,6 +231,9 @@ function advance(g: GameState): void {
     const res = g.resolution;
     if (res) {
       if (res.prompt) {
+        // anyone who has left the game answers with the defaults at once (A17)
+        const gone = res.prompt.who.filter((id) => g.players[id].out && !res.prompt!.responses[id]);
+        if (gone.length) expire(g, res.prompt, gone);
         if (!isComplete(res.prompt)) return; // waiting for answers
         const p = res.prompt;
         res.prompt = null;
@@ -195,14 +245,20 @@ function advance(g: GameState): void {
       finishResolution(g, res);
       continue;
     }
+    if (settleLeavers(g)) continue;
     if (settleClaims(g)) continue;
     if ((g.goldRisers.length || g.kingLostGold || g.config.kingCheck === 'continuous') && crownCheck(g)) continue;
 
     if (g.phase === 'playing') {
       const t = g.turn;
       if (!t) {
-        if (g.nextTurnIndex < g.turnOrder.length) startTurn(g, g.nextTurnIndex);
-        else enterNegotiation(g);
+        if (g.nextTurnIndex >= g.turnOrder.length) enterNegotiation(g);
+        else if (g.players[g.seats[g.turnOrder[g.nextTurnIndex]]].out) g.nextTurnIndex += 1; // left the game (A17)
+        else startTurn(g, g.nextTurnIndex);
+        continue;
+      }
+      if (g.players[t.playerId].out) {
+        finishTurn(g, true);
         continue;
       }
       if (t.endNow || t.plays >= t.allowance) {
@@ -239,8 +295,8 @@ function startTurn(g: GameState, index: number) {
   const p = g.players[pid];
   g.turnNo += 1;
   expireStatuses(g, 'turnStart', pid);
-  // Rules p11-12: King plays 3 (2 with only 3 Nobles), Nobles play 2
-  const allowance = p.role === 'king' ? (nobleIds(g).length === 3 ? 2 : 3) : 2;
+  // Rules p11-12: King plays 3 (2 with only 3 Nobles, or fewer once someone has left), Nobles play 2
+  const allowance = p.role === 'king' ? (nobleIds(g).length <= 3 ? 2 : 3) : 2;
   g.turn = { index, seat, playerId: pid, plays: 0, allowance, baseDraw: allowance, startedAt: g.now };
   log(g, 'round', `${p.name}'s turn${p.role === 'king' ? ' (King)' : ''}: play ${allowance} cards`, { actor: pid });
 }

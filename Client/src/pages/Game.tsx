@@ -93,6 +93,7 @@ export function Game({ room }: { room: RoomView }) {
       <main className="panes">
         <section className={pane('table')} aria-label="Table">
           <NowPanel g={g} name={name} onAnswer={() => setHiddenPrompt(null)} />
+          {g.players.find((p) => p.id === g.you)?.out && <p className="panel center muted">The host removed you from the game. You can keep watching.</p>}
           <DisputeBanner g={g} name={name} onOpen={setOpenClaim} />
           <div className="stack" style={{ gap: 8 }}>
             <PlayerList room={room} name={name} onSelect={setOpenPlayer} />

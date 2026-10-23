@@ -156,6 +156,9 @@ export const api = {
   kick: (playerId: string) => run(emit('room:kick', { playerId })),
   start: () => run(emit('room:start')),
   lobby: () => run(emit('room:lobby')),
+  /** Host, mid-game: skip that player's turn / remove them from the game for good. */
+  skipTurn: (playerId: string) => run(emit('game:skip', { playerId })),
+  removeFromGame: (playerId: string) => run(emit('game:remove', { playerId })),
   chat: (to: string | null, text: string) => run(emit('chat:send', { to, text })),
   /** A game action. If the answer is lost, it is resent with the same id (the server ignores repeats). */
   async act(action: { type: string } & Record<string, unknown>) {

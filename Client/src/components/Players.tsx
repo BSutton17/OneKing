@@ -26,7 +26,8 @@ export function PlayerList({ room, name, onSelect }: { room: RoomView; name: Nam
             <span style={{ minWidth: 0 }}>
               <span className="pname">{p.role === 'king' && <Crown />}{p.name}</span>
               <span className="pmeta">
-                {!online.get(p.id) && <span className="tag warn">offline</span>}
+                {room.hostId === p.id && <span className="tag">host</span>}
+                {p.out ? <span className="tag warn">left the game</span> : !online.get(p.id) && <span className="tag warn">offline</span>}
                 {isTurn && <span className="tag king">playing {g.turn!.plays}/{g.turn!.allowance}</span>}
                 <span className="tag">{p.handCount} cards</span>
                 {p.faceDown.length > 0 && (
@@ -54,10 +55,20 @@ export function PlayerSheet({ room, id, name, onClose, onMessage, onOffer }: {
   const p = g.players.find((x) => x.id === id)!;
   const me = id === g.you;
   const tags = statusTags(g, id, name);
+  // the host keeps the game moving when someone walks away from the table
+  const host = room.hostId === g.you && !me && !p.out && g.phase !== 'over';
+  const skip = () => {
+    if (confirm(`Skip ${p.name}'s turn?`)) void api.skipTurn(id);
+  };
+  const remove = () => {
+    if (confirm(`Remove ${p.name} from the game for good? Their turns are skipped and their cards, gold and effects are gone.${p.role === 'king' ? ' The richest Noble takes the crown.' : ''}`)) {
+      void api.removeFromGame(id).then((r) => r.ok && onClose());
+    }
+  };
   return (
     <Sheet onClose={onClose} label={`${p.name}'s details`}>
       <h2>{p.role === 'king' && <Crown />}{p.name}{me ? ' (you)' : ''}</h2>
-      <p className="center muted">{p.role === 'king' ? 'The King' : 'A Noble'} · seat {p.seat + 1} · {p.handCount} cards in hand</p>
+      <p className="center muted">{p.out ? 'Removed from the game' : <>{p.role === 'king' ? 'The King' : 'A Noble'} · seat {p.seat + 1} · {p.handCount} cards in hand</>}</p>
       <div style={{ maxWidth: 260, margin: '12px auto 0' }}>
         <MoneyTracker role={p.role} gold={p.gold} />
       </div>
@@ -76,7 +87,16 @@ export function PlayerSheet({ room, id, name, onClose, onMessage, onOffer }: {
         </>
       )}
       <Settlements g={g} name={name} only={id} />
-      {!me && (onMessage || g.negotiation) && (
+      {host && (
+        <>
+          <p className="section-title">Host</p>
+          <div className="row">
+            {g.turn?.playerId === id && <button className="btn ghost grow" disabled={Boolean(g.resolution)} onClick={skip}>Skip their turn</button>}
+            <button className="btn danger grow" onClick={remove}>Remove from game</button>
+          </div>
+        </>
+      )}
+      {!me && !p.out && (onMessage || g.negotiation) && (
         <div className="row">
           {onMessage && <button className="btn ghost grow" onClick={() => onMessage(id)}>Message privately</button>}
           {g.negotiation && <button className="btn gold grow" onClick={() => onOffer(id)}>{g.mode === 'inPerson' ? 'Trade' : 'Offer a deal'}</button>}

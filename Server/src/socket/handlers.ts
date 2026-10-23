@@ -12,6 +12,8 @@
 //   room:start    {}                             host, lobby, 4-8 players
 //   room:lobby    {}                             host, after the game
 //   game:action   { actionId, type, ... }        see game/engine.ts Action
+//   game:skip     { playerId }                   host, mid-game: skip that player's turn
+//   game:remove   { playerId }                   host, mid-game: remove that player from the game
 //   chat:send     { to: playerId | null, text }  null = everyone; virtual games only
 //
 // Server -> client:
@@ -73,6 +75,8 @@ export function attachHandlers(io: Server, manager: RoomManager, { log = console
     on('room:start', () => manager.start(socket.id));
     on('room:lobby', () => manager.backToLobby(socket.id));
     on('game:action', (action) => manager.act(socket.id, action));
+    on('game:skip', ({ playerId }) => manager.hostSkipTurn(socket.id, playerId));
+    on('game:remove', ({ playerId }) => manager.hostRemove(socket.id, playerId));
     on('chat:send', (b) => manager.chat(socket.id, b));
 
     socket.on('disconnect', () => manager.disconnect(socket.id));

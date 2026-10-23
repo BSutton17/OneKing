@@ -2,7 +2,7 @@
 // invariant checks used by the engine tests and the full-game fuzz test.
 
 import assert from 'node:assert/strict';
-import { applyAction, createGame, endNegotiationEarly, tick, type Action } from '../src/game/engine.js';
+import { applyAction, createGame, endNegotiationEarly, removePlayer, setAway, tick, type Action } from '../src/game/engine.js';
 import { HAND_SIZE } from '../src/game/config.js';
 import type { GameConfig, GameState, PlayerId } from '../src/game/types.js';
 import { viewFor } from '../src/game/view.js';
@@ -31,7 +31,9 @@ export function fails(g: GameState, pid: PlayerId, action: Action, pattern?: Reg
 }
 
 export const king = (g: GameState) => g.seats[g.kingSeat];
-export const nobles = (g: GameState) => g.seats.filter((id) => g.players[id].role === 'noble');
+export const nobles = (g: GameState) => g.seats.filter((id) => g.players[id].role === 'noble' && !g.players[id].out);
+/** Players still in the game, in seat order. */
+export const live = (g: GameState) => g.seats.filter((id) => !g.players[id].out);
 export const keyOfCard = (g: GameState, id: string) => g.cards[id].key;
 
 /** Put a specific card into a player's hand (swapping one of theirs back into the deck). */
@@ -91,8 +93,14 @@ export function checkInvariants(g: GameState): void {
   assert.equal(kings.length, 1, 'exactly one King');
   assert.equal(g.seats[g.kingSeat], kings[0].id, 'the King sits in the King seat');
   g.seats.forEach((id, seat) => assert.equal(g.players[id].seat, seat));
+  for (const p of Object.values(g.players)) {
+    if (!p.out || g.resolution) continue;
+    assert.equal(p.role, 'noble', `${p.name} left but is still King`);
+    assert.equal(p.hand.length + p.gold, 0, `${p.name} left but still has cards or gold`);
+  }
   if (g.phase === 'negotiation' && !g.resolution) {
     for (const p of Object.values(g.players)) {
+      if (p.out) continue;
       const canDraw = g.decks[p.role].length + g.discard[p.role].length > 0;
       if (canDraw) assert.ok(p.hand.length >= HAND_SIZE, `${p.name} has ${p.hand.length} cards in negotiation`);
     }
@@ -145,13 +153,19 @@ export function randomStep(g: GameState, r: () => number, now: number): GameStat
   }
   if (g.phase === 'playing' && g.turn) {
     const pid = g.turn.playerId;
+    // now and then someone drops out for a while, or the host removes a player for good (A17)
+    if (r() < 0.01) return setAway(g, live(g).filter(() => r() < 0.3), now) ?? g;
+    if (r() < 0.002 && live(g).length > 4) {
+      const res = removePlayer(g, pick(r, live(g)), now);
+      if (res.ok) return res.state;
+    }
     // occasionally dispute a spoken line (in person), settle a feud or free a debtor out of turn
     const disputed = g.claims.find((c) => c.open);
     if (disputed && r() < 0.3) {
-      const voter = g.seats.find((id) => id !== disputed.by && !disputed.votes.includes(id));
+      const voter = live(g).find((id) => id !== disputed.by && !disputed.votes.includes(id));
       if (voter) return act(g, voter, { type: 'overrule', claimId: disputed.id, vote: true }, now);
     }
-    for (const id of g.seats) {
+    for (const id of live(g)) {
       const v = viewFor(g, id);
       if (v.legal.payBadBlood.length && r() < 0.1) return act(g, id, { type: 'payBadBlood', statusId: v.legal.payBadBlood[0] }, now);
       if (v.legal.freeDebtor.length && r() < 0.05) return act(g, id, { type: 'freeDebtor', statusId: v.legal.freeDebtor[0] }, now);
@@ -182,7 +196,7 @@ export function randomStep(g: GameState, r: () => number, now: number): GameStat
   }
   if (g.phase === 'negotiation' && g.negotiation) {
     const roll = r();
-    const pid = pick(r, g.seats);
+    const pid = pick(r, live(g));
     const v = viewFor(g, pid);
     const incoming = v.negotiation!.offers.filter((o) => o.to === pid);
     if (incoming.length && roll < 0.35) {
@@ -193,7 +207,7 @@ export function randomStep(g: GameState, r: () => number, now: number): GameStat
       return act(g, pid, { type: 'declineOffer', offerId: o.id }, now);
     }
     if (roll < 0.7) {
-      const to = pick(r, g.seats.filter((x) => x !== pid));
+      const to = pick(r, live(g).filter((x) => x !== pid));
       const sameRole = g.players[to].role === g.players[pid].role;
       const card = sameRole && r() < 0.5 ? pick(r, g.players[pid].hand) : null;
       const offer: Action = {

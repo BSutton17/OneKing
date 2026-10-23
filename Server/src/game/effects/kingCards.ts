@@ -273,7 +273,7 @@ export const kingCards: Record<string, CardHandler> = {
       const order: PlayerId[] = [];
       for (let i = 1; i < g.seats.length; i++) {
         const id = g.seats[seatFrom(g, g.kingSeat, i)];
-        if (g.players[id].role === 'noble') order.push(id);
+        if (g.players[id].role === 'noble' && !g.players[id].out) order.push(id);
       }
       announce(g, res, 'the Nobles vote');
       ask(g, res, {
