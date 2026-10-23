@@ -10,6 +10,7 @@
 
 import { CARDS, cardDef } from '../cards/catalog.js';
 import { discard, draw, refill, removeFromHand } from './cards.js';
+import { closeClaims, settleClaims, voteOverrule } from './claims.js';
 import { HAND_SIZE, MAX_PLAYERS, MIN_PLAYERS, ROUNDS, START_GOLD, makeConfig } from './config.js';
 import { handlerFor, handlerForKey } from './effects/index.js';
 import type { FieldSpec } from './effects/types.js';
@@ -34,7 +35,8 @@ export type Action =
   | { type: 'acceptOffer'; offerId: string; cardId?: string | null; discardId?: string | null }
   | { type: 'declineOffer'; offerId: string }
   | { type: 'cancelOffer'; offerId: string }
-  | { type: 'doneNegotiating'; done: boolean };
+  | { type: 'doneNegotiating'; done: boolean }
+  | { type: 'overrule'; claimId: string; vote: boolean };
 
 export type Result = { ok: true; state: GameState } | { ok: false; error: string };
 
@@ -49,7 +51,7 @@ export function createGame(seated: { id: PlayerId; name: string }[], opts: { con
     players: {}, seats: seated.map((p) => p.id), kingSeat: 0,
     round: 1, phase: 'playing', direction: 1, turnOrder: [], turn: null, nextTurnIndex: 0, turnNo: 0,
     cards: {}, decks: { king: [], noble: [] }, discard: { king: [], noble: [] },
-    faceDown: [], statuses: [], resolution: null, negotiation: null, roundEnd: null,
+    faceDown: [], statuses: [], claims: [], resolution: null, negotiation: null, roundEnd: null,
     goldRisers: [], kingLostGold: false, log: [], transactions: [], winner: null, actionId: 'setup', now,
   };
 
@@ -126,6 +128,7 @@ function dispatch(g: GameState, pid: PlayerId, a: Action) {
       g.players[pid].negotiationDone = a.done === true;
       return;
     }
+    case 'overrule': return voteOverrule(g, pid, a.claimId, a.vote);
     default: fail('Unknown action');
   }
 }
@@ -192,6 +195,7 @@ function advance(g: GameState): void {
       finishResolution(g, res);
       continue;
     }
+    if (settleClaims(g)) continue;
     if ((g.goldRisers.length || g.kingLostGold || g.config.kingCheck === 'continuous') && crownCheck(g)) continue;
 
     if (g.phase === 'playing') {
@@ -275,6 +279,11 @@ function enterNegotiation(g: GameState) {
 
 function closeNegotiation(g: GameState, why: string) {
   if (!g.negotiation) return;
+  // offers nobody answered expire: say so, or the proposer may think the gold moved
+  for (const o of g.negotiation.offers) {
+    log(g, 'private', `${nameOf(g, o.to)} never confirmed your offer — nothing changed hands`, { to: [o.from] });
+    log(g, 'private', `You never answered ${nameOf(g, o.from)}'s offer — it expired`, { to: [o.to] });
+  }
   g.negotiation = null;
   g.roundEnd = 'settle';
   log(g, 'phase', `${why} The Negotiation Phase is over.`);
@@ -292,6 +301,7 @@ function settlePredictions(g: GameState) {
 }
 
 function startRound(g: GameState) {
+  closeClaims(g);
   g.round += 1;
   g.direction = g.round % 2 === 1 ? 1 : -1;
   g.turnOrder = orderFor(g);
@@ -314,6 +324,7 @@ function startRound(g: GameState) {
 
 function gameOver(g: GameState) {
   const king = kingOf(g);
+  closeClaims(g);
   g.phase = 'over';
   g.winner = king.id;
   g.negotiation = null;

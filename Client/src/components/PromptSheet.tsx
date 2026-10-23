@@ -73,8 +73,8 @@ export function PromptSheet({ g, prompt, name, diceMode, onHide }: { g: GameView
 
       {prompt.kind === 'support' && (
         <div className="row">
-          <button className="btn gold grow" disabled={busy} onClick={() => answer({})}>I support it</button>
-          <button className="btn ghost grow" disabled={busy} onClick={() => answer({ declined: true })}>Stay quiet</button>
+          <button className="btn gold grow" disabled={busy} onClick={() => answer({})}>Yes, I backed it</button>
+          <button className="btn ghost grow" disabled={busy} onClick={() => answer({ declined: true })}>No, I didn't</button>
         </div>
       )}
 
@@ -140,7 +140,7 @@ export function Answers({ prompt, name }: { prompt: PromptView; name: NameOf }) 
         let what = '';
         if (r?.kind === 'roll') what = ` rolled ${r.value}`;
         else if (r?.kind === 'vote') what = r.yes ? ' ✓' : ' ✗';
-        else if (r?.kind === 'support') what = r.declined ? ' quiet' : ' supports';
+        else if (r?.kind === 'support') what = r.declined ? ' denies' : ' confirms';
         else if (r?.kind === 'kingMaker') what = r.side ? ` King Maker: ${r.side}` : ' pass';
         else if (r?.kind === 'player') what = ` → ${name(r.playerId)}`;
         else if (done) what = ' ✓';

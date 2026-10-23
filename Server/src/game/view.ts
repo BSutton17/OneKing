@@ -3,6 +3,7 @@
 // other players' hands, the decks, face-down card identities (unless you
 // placed it), other people's offers and private log lines are simply absent.
 
+import { overrulers } from './claims.js';
 import { canEndTurnEarly, placeLegality, playLegality } from './engine.js';
 import { statusesOf } from './protection.js';
 import { kingOf } from './state.js';
@@ -82,6 +83,11 @@ export function viewFor(g: GameState, pid: PlayerId) {
       };
     }),
     statuses: statuses.map((s) => ('cardId' in s ? { ...s, cardId: undefined } : s)),
+    // spoken lines the table may overrule (C20); what the undo touches (card ids) stays on the server
+    claims: g.claims.slice(-30).map((c) => ({
+      id: c.id, by: c.by, round: c.round, cardKey: c.cardKey, text: c.text, penalty: c.penalty,
+      votes: c.votes, voters: overrulers(g, c), open: c.open, overruled: c.overruled,
+    })),
     resolution: res
       ? {
           id: res.id, kind: res.kind, actor: res.actor, cardKey: res.cardKey ?? null, option: res.option ?? null,

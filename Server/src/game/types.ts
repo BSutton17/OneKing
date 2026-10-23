@@ -177,6 +177,25 @@ export interface LogEntry {
   to?: PlayerId[]; // private entry: only these players see it
   actor?: PlayerId;
   cardKey?: string;
+  claimId?: string; // a spoken line the rest of the table can overrule (C20)
+}
+
+/**
+ * In person the game can't hear a line being said, so the speaker's tap is a
+ * claim. Until the round ends, every other player can vote to overrule it;
+ * if they all do, the speaker is treated as having refused (C20).
+ */
+export interface Claim {
+  id: string;
+  by: PlayerId;
+  round: number;
+  cardKey: string;
+  text: string; // "Bob pledged their loyalty"
+  penalty: string; // what overruling does, e.g. "Bob gives the 300 gold back to the bank"
+  undo: { kind: 'gold'; amount: number; source: string } | { kind: 'cards'; cardIds: string[] };
+  votes: PlayerId[]; // who wants to overrule
+  open: boolean;
+  overruled: boolean;
 }
 
 export interface Transaction {
@@ -213,6 +232,7 @@ export interface GameState {
   discard: Record<DeckName, string[]>;
   faceDown: FaceDown[];
   statuses: Status[];
+  claims: Claim[];
   resolution: Resolution | null;
   negotiation: { endsAt: number; offers: Offer[] } | null;
   // after negotiation: settle this round's predictions, then start the next round / end the game

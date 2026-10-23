@@ -101,6 +101,21 @@ export interface LogEntry {
   text: string;
   actor?: PlayerId;
   cardKey?: string;
+  claimId?: string;
+}
+
+/** A spoken line (in person) the rest of the table can overrule, unanimously, until the round ends. */
+export interface ClaimView {
+  id: string;
+  by: PlayerId;
+  round: number;
+  cardKey: string;
+  text: string;
+  penalty: string;
+  votes: PlayerId[];
+  voters: PlayerId[];
+  open: boolean;
+  overruled: boolean;
 }
 
 export interface Transaction {
@@ -129,6 +144,7 @@ export interface GameView {
   turn: { playerId: PlayerId; plays: number; allowance: number } | null;
   players: PlayerView[];
   statuses: Status[];
+  claims: ClaimView[];
   resolution: {
     id: string;
     kind: 'card' | 'rolloff';

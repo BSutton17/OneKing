@@ -158,22 +158,31 @@ describe('Betrayal, Knights and bluffs (Rules p16)', () => {
     fails(g, me, { type: 'play', cardId: card, setup: { target: nobles(g).find((x) => x !== me)! } }, /first round/);
   });
 
-  test('with one supporting Noble you take all their gold', () => {
+  test('the player names their backer; once the backer confirms, they take all the gold', () => {
     let g = round2();
     const me = g.turn!.playerId;
     const [victim, backer] = nobles(g).filter((x) => x !== me);
-    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betrayal'), setup: { target: victim } });
-    assert.ok(!prompt(g).who.includes(victim), 'the victim is not asked to support');
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betrayal'), setup: { target: victim, backer } });
+    assert.deepEqual(prompt(g).who, [backer], 'only the named backer is asked');
+    assert.match(g.log.findLast((e) => e.kind === 'play')!.text, new RegExp(`backed by ${g.players[backer].name}`));
     g = respond(g, backer, {});
     assert.equal(gold(g, victim), 0);
     assert.equal(gold(g, me), 1200);
+    assert.ok(g.log.some((e) => e.text === `${g.players[backer].name} confirms they backed the Betrayal`));
   });
 
-  test('without support it has no effect', () => {
+  test('a backer is required, it cannot be the victim, and a backer who denies it (or stays silent) stops it', () => {
     let g = round2();
     const me = g.turn!.playerId;
-    const [victim] = nobles(g).filter((x) => x !== me);
-    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betrayal'), setup: { target: victim } });
+    const [victim, backer] = nobles(g).filter((x) => x !== me);
+    const card = give(g, me, 'noble:betrayal');
+    fails(g, me, { type: 'play', cardId: card, setup: { target: victim } }, /backed you/);
+    fails(g, me, { type: 'play', cardId: card, setup: { target: victim, backer: victim } }, /someone different/);
+    fails(g, me, { type: 'play', cardId: card, setup: { target: victim, backer: king(g) } }, /backed you/);
+    const denied = respond(act(g, me, { type: 'play', cardId: card, setup: { target: victim, backer } }), backer, { declined: true });
+    assert.equal(gold(denied, victim), 600);
+    assert.ok(denied.log.some((e) => /did not back the Betrayal/.test(e.text)));
+    g = act(g, me, { type: 'play', cardId: card, setup: { target: victim, backer } });
     g = tick(g, prompt(g).deadline)!;
     assert.equal(gold(g, victim), 600);
     assert.equal(gold(g, me), 600);
@@ -196,12 +205,12 @@ describe('Betrayal, Knights and bluffs (Rules p16)', () => {
     const v = viewFor(g, me);
     for (const p of v.players) for (const f of p.faceDown) assert.equal(f.cardKey, null);
 
-    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betrayal'), setup: { target: shielded } });
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betrayal'), setup: { target: shielded, backer } });
     g = respond(g, backer, {});
     assert.equal(gold(g, shielded), 600, 'the Knight blocked it');
     assert.equal(g.faceDown.some((f) => f.slot === 'fx1'), false, 'the Knight is spent');
 
-    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betrayal'), setup: { target: bluffer } });
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betrayal'), setup: { target: bluffer, backer } });
     g = respond(g, backer, {});
     assert.equal(gold(g, bluffer), 0, 'a bluff gives no protection');
     assert.ok(g.log.some((e) => /was a bluff/.test(e.text)));
@@ -239,8 +248,9 @@ describe('Betray the King and King Maker', () => {
     const kmCard = give(g, maker, 'noble:king_maker');
     const mySeat = g.players[me].seat;
     const kingHand = [...g.players[oldKing].hand];
-    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betray_the_king') });
-    assert.ok(!prompt(g).who.includes(oldKing), 'the King cannot support it');
+    fails(g, me, { type: 'play', cardId: give(g, me, 'noble:betray_the_king'), setup: { backer: s1, backer2: oldKing } }, /backed you/);
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betray_the_king'), setup: { backer: s1, backer2: s2 } });
+    assert.deepEqual(prompt(g).who, [s1, s2], 'only the two named backers are asked');
     g = respond(g, s1, {});
     g = respond(g, s2, {});
     assert.equal(prompt(g).kind, 'kingMaker');
@@ -267,7 +277,7 @@ describe('Betray the King and King Maker', () => {
     const k = king(g);
     const [s1, s2, maker] = nobles(g).filter((x) => x !== me);
     const km = give(g, maker, 'noble:king_maker');
-    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betray_the_king') });
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betray_the_king'), setup: { backer: s1, backer2: s2 } });
     g = respond(g, s1, {});
     g = respond(g, s2, {});
     g = respond(g, maker, { cardId: km, side: 'oppose' });

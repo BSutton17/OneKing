@@ -9,6 +9,7 @@ import type { NameOf } from '../lib/game';
 import type { GameView, Offer, PlayerId, RoomView } from '../lib/types';
 import { api, useStore } from '../net/socket';
 import { CardImg, Countdown, Crown, Sheet } from './common';
+import { Settlements } from './Players';
 
 const LIMIT = 400;
 
@@ -172,6 +173,7 @@ export function TradePane({ room, name, openIncoming }: { room: RoomView; name: 
           <p className="muted center" style={{ fontSize: '.85rem' }}>Gold and cards change hands in the Negotiation Phase at the end of each round. Until then — talk, plot and win support for your Betrayal out loud.</p>
         </>
       )}
+      <Settlements g={g} name={name} />
       <div className="trade-actions">
         <button className="btn gold" disabled={!open} onClick={() => setForm('gold')}>Give gold</button>
         <button className="btn" disabled={!open} onClick={() => setForm('swap')}>Swap a card</button>
@@ -193,6 +195,7 @@ function TradeSheet({ g, kind, name, onClose }: { g: GameView; kind: TradeKind; 
   const them = g.players.find((p) => p.id === to);
   const maxGive = them ? Math.min(you.gold, LIMIT - them.receivedInNegotiation, 2000 - them.gold) : 0;
   const ready = them && (kind === 'gold' ? gold > 0 : Boolean(card));
+  const feud = them && g.statuses.some((s) => s.kind === 'badBlood' && ((s.a === g.you && s.b === them.id) || (s.b === g.you && s.a === them.id)));
   const title = kind === 'gold' ? 'Give gold' : kind === 'swap' ? 'Swap a card' : 'Discard a card';
   const who = kind === 'discard' ? 'Who is this deal with? They confirm it.' : kind === 'gold' ? 'Give to' : 'Swap with';
   const send = async () => {
@@ -224,6 +227,7 @@ function TradeSheet({ g, kind, name, onClose }: { g: GameView; kind: TradeKind; 
         <>
           <Stepper value={gold} max={Math.max(0, maxGive)} onChange={setGold} />
           <p className="faint center" style={{ fontSize: '.75rem' }}>{them.name} can still receive {LIMIT - them.receivedInNegotiation} gold this phase.</p>
+          {feud && <p className="center" style={{ fontSize: '.8rem' }}>Giving {them.name} 200 or more ends your Bad Blood once they confirm. The Bad Blood button on the Trade tab pays them at once, with no confirmation needed.</p>}
         </>
       )}
       {them && kind !== 'gold' && (
@@ -256,6 +260,7 @@ export function DealsPane({ room, name, openOffer, openIncoming, dmTarget, setDm
         ) : (
           <p className="muted center" style={{ fontSize: '.85rem' }}>Deals open in the Negotiation Phase at the end of the round. Chat is open any time — use it to win support for a Betrayal.</p>
         )}
+        <Settlements g={g} name={name} />
         <Incoming g={g} name={name} open={openIncoming} />
         <Outgoing g={g} name={name} />
       </section>

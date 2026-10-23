@@ -3,6 +3,7 @@
 
 import { cardDef } from '../../cards/catalog.js';
 import { discard, draw, isRoyalBomb, refill, removeFromHand } from '../cards.js';
+import { claim } from '../claims.js';
 import { bankGain, bankLoss, transfer } from '../gold.js';
 import { crown } from '../king.js';
 import { knightBlocksBetrayal, removeAllExcept } from '../knights.js';
@@ -94,23 +95,24 @@ export const noble: Record<string, CardHandler> = {
 
   betrayal: {
     check: (g) => (g.round < 2 ? 'Not playable in the first round' : null),
-    fields: (g, a) => [playerField(g, 'target', 'Whose gold will you take?', otherNobles(g, a))],
+    // the player names the Noble who backed them out loud, and that Noble must confirm it (C1)
+    fields: (g, a) => [
+      playerField(g, 'target', 'Whose gold will you take?', otherNobles(g, a)),
+      playerField(g, 'backer', 'Which Noble backed you out loud?', otherNobles(g, a), ['target']),
+    ],
     start(g, res) {
-      const t = target(res);
-      announce(g, res, `targeting ${n(g, t)}`);
+      const [t, backer] = [target(res), target(res, 'backer')];
+      announce(g, res, `targeting ${n(g, t)}, backed by ${n(g, backer)}`);
       betrayalPlayed(g, res.actor);
-      const who = otherNobles(g, res.actor).filter((id) => id !== t);
-      if (!who.length) return say(g, 'No Noble is able to support it — no effect');
       ask(g, res, {
-        kind: 'support', title: 'Betrayal!', need: 1, who, ms: g.config.betrayalSupportMs,
-        text: `${n(g, res.actor)} wants to take ALL of ${n(g, t)}'s gold (${g.players[t].gold}). It needs vocal support from one Noble.`,
+        kind: 'support', title: 'Did you back this Betrayal?', who: [backer], ms: g.config.betrayalSupportMs,
+        text: `${n(g, res.actor)} says you backed their Betrayal: they take ALL of ${n(g, t)}'s gold (${g.players[t].gold}). Confirm it, or deny it and the Betrayal has no effect.`,
       });
     },
     onPrompt(g, res, p) {
-      const t = target(res);
-      const backers = supporters(p);
-      if (!backers.length) return say(g, 'Nobody supported the Betrayal — it has no effect');
-      say(g, `${backers.map((id) => n(g, id)).join(', ')} supported the Betrayal`);
+      const [t, backer] = [target(res), target(res, 'backer')];
+      if (!supporters(p).includes(backer)) return say(g, `${n(g, backer)} did not back the Betrayal — it has no effect`);
+      say(g, `${n(g, backer)} confirms they backed the Betrayal`);
       if (knightBlocksBetrayal(g, t)) return;
       take(g, res.actor, t, g.players[t].gold, src(res), res.actor, true);
     },
@@ -118,23 +120,27 @@ export const noble: Record<string, CardHandler> = {
 
   betray_the_king: {
     check: (g) => (g.round < 2 ? 'Not playable in the first round' : null),
+    // the player names the two players who backed them out loud; both must confirm it (C1)
+    fields(g, a) {
+      const who = others(g, a).filter((id) => id !== kingOf(g).id);
+      return [playerField(g, 'backer', 'First player who backed you out loud', who), playerField(g, 'backer2', 'Second player who backed you', who, ['backer'])];
+    },
     start(g, res) {
       const king = kingOf(g).id;
-      announce(g, res, `challenging ${n(g, king)}`);
-      const who = others(g, res.actor).filter((id) => id !== king);
-      if (who.length < 2) return say(g, 'Not enough players could support it — no effect');
+      const backers = [target(res, 'backer'), target(res, 'backer2')];
+      announce(g, res, `challenging ${n(g, king)}, backed by ${backers.map((id) => n(g, id)).join(' and ')}`);
       res.step = 'support';
       ask(g, res, {
-        kind: 'support', title: 'Betray the King!', need: 2, who, ms: g.config.betrayKingSupportMs,
-        text: `${n(g, res.actor)} moves against ${n(g, king)}. It needs vocal support from TWO players.`,
+        kind: 'support', title: 'Did you back this betrayal?', who: backers, ms: g.config.betrayKingSupportMs,
+        text: `${n(g, res.actor)} says you backed their move against ${n(g, king)}. Both backers must confirm it, or it has no effect.`,
       });
     },
     onPrompt(g, res, p) {
       const king = kingOf(g).id;
       if (res.step === 'support') {
-        const backers = supporters(p);
-        if (backers.length < 2) return say(g, 'Betray the King did not get two supporters — no effect');
-        say(g, `${backers.map((id) => n(g, id)).join(' and ')} support the betrayal`);
+        const denied = p.who.filter((id) => !supporters(p).includes(id));
+        if (denied.length) return say(g, `${denied.map((id) => n(g, id)).join(' and ')} did not back it — Betray the King has no effect`);
+        say(g, `${p.who.map((id) => n(g, id)).join(' and ')} confirm they back the betrayal`);
         res.step = 'kingMaker';
         ask(g, res, {
           kind: 'kingMaker', title: 'King Maker', who: nobleIds(g), ms: g.config.kingMakerMs,
@@ -197,9 +203,14 @@ export const noble: Record<string, CardHandler> = {
     onPrompt(g, res, p) {
       if (res.option === 1) {
         if (choiceOf(p, res.actor) !== 'praise') return say(g, `${n(g, res.actor)} refuses to praise the King and draws nothing`);
-        if (g.config.mode === 'virtual') log(g, 'speech', 'Long live the King!', { actor: res.actor });
-        else say(g, `${n(g, res.actor)} praised the King`);
+        const hand = g.players[res.actor].hand;
+        const before = hand.length;
         draw(g, res.actor, 2);
+        if (g.config.mode === 'virtual') return void log(g, 'speech', 'Long live the King!', { actor: res.actor });
+        claim(g, {
+          by: res.actor, cardKey: res.cardKey!, text: `${n(g, res.actor)} praised the King`,
+          penalty: `${n(g, res.actor)} loses the two cards they drew`, undo: { kind: 'cards', cardIds: hand.slice(before) },
+        });
         return;
       }
       const no = p.who.filter((id) => !voteOf(p, id));

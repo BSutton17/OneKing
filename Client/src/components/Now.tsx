@@ -61,8 +61,9 @@ export function NowPanel({ g, name, onAnswer }: { g: GameView; name: NameOf; onA
   );
 }
 
-export function LogPane({ g, name }: { g: GameView; name: NameOf }) {
+export function LogPane({ g, name, onClaim }: { g: GameView; name: NameOf; onClaim: (id: string) => void }) {
   const [tab, setTab] = useState<'events' | 'gold'>('events');
+  const claims = new Map(g.claims.map((c) => [c.id, c]));
   return (
     <section className="panel stack">
       <div className="chips" role="tablist">
@@ -71,11 +72,20 @@ export function LogPane({ g, name }: { g: GameView; name: NameOf }) {
       </div>
       {tab === 'events' ? (
         <ol className="log" aria-label="Game log, newest first">
-          {[...g.log].reverse().map((e) => (
-            <li key={e.id} className={`k-${e.kind}`}>
-              {e.kind === 'speech' ? <><b>{name(e.actor)}:</b> “{e.text}”</> : e.kind === 'private' ? <><b>Private:</b> {e.text}</> : e.text}
-            </li>
-          ))}
+          {[...g.log].reverse().map((e) => {
+            const text = e.kind === 'speech' ? <><b>{name(e.actor)}:</b> “{e.text}”</> : e.kind === 'private' ? <><b>Private:</b> {e.text}</> : e.text;
+            const c = e.claimId ? claims.get(e.claimId) : undefined;
+            if (!c) return <li key={e.id} className={`k-${e.kind}`}>{text}</li>;
+            // a spoken line the table can overrule: tap it
+            const tag = c.overruled ? 'overruled' : !c.open ? null : c.by === g.you ? `${c.votes.length}/${c.voters.length} dispute` : c.votes.includes(g.you) ? 'you dispute this' : 'tap to dispute';
+            return (
+              <li key={e.id} className={`k-${e.kind} claimable`}>
+                <button type="button" onClick={() => onClaim(c.id)}>
+                  {text}{tag && <span className={`tag${c.overruled ? ' warn' : ''}`}>{tag}</span>}
+                </button>
+              </li>
+            );
+          })}
         </ol>
       ) : (
         <ol className="log" aria-label="Gold transactions, newest first">

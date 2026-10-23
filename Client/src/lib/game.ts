@@ -39,6 +39,7 @@ export function setupSummary(setup: Record<string, string | string[]>, name: Nam
     .map(([key, v]) => {
       if (Array.isArray(v)) return v.map(name).join(' · ');
       if (key === 'amount') return `${v} gold`;
+      if (key.startsWith('backer')) return `backed by ${name(v)}`;
       if (key === 'sentence') return `“${v}”`;
       if (v.startsWith('player:')) return `${name(v.slice(7))}'s hand`;
       if (v.startsWith('slot:')) return 'a face-down card';

@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { CardSheet } from '../components/CardSheet';
+import { ClaimSheet, DisputeBanner } from '../components/Claims';
 import { CardImg, Countdown, useWide } from '../components/common';
 import { DealsPane, IncomingOfferSheet, OfferSheet, TradePane } from '../components/Deals';
 import { MoneyTracker, RoundTracker } from '../components/MoneyTracker';
@@ -34,6 +35,7 @@ export function Game({ room }: { room: RoomView }) {
   const [shownOffer, setShownOffer] = useState<string | null>(null);
   const [dm, setDm] = useState<PlayerId | null>(null);
   const [overClosed, setOverClosed] = useState(false);
+  const [openClaim, setOpenClaim] = useState<string | null>(null);
 
   const me = g.players.find((p) => p.id === g.you)!;
   const prompt = g.resolution?.prompt;
@@ -91,6 +93,7 @@ export function Game({ room }: { room: RoomView }) {
       <main className="panes">
         <section className={pane('table')} aria-label="Table">
           <NowPanel g={g} name={name} onAnswer={() => setHiddenPrompt(null)} />
+          <DisputeBanner g={g} name={name} onOpen={setOpenClaim} />
           <div className="stack" style={{ gap: 8 }}>
             <PlayerList room={room} name={name} onSelect={setOpenPlayer} />
             <p className="faint center" style={{ fontSize: '.72rem' }}>Decks: King {g.decks.king} · Noble {g.decks.noble} — tap a player for details</p>
@@ -127,7 +130,7 @@ export function Game({ room }: { room: RoomView }) {
         </section>
 
         <section className={pane('log')} aria-label="Game log">
-          <LogPane g={g} name={name} />
+          <LogPane g={g} name={name} onClaim={setOpenClaim} />
         </section>
       </main>
 
@@ -157,6 +160,9 @@ export function Game({ room }: { room: RoomView }) {
           onOffer={(id) => { setOpenPlayer(null); setTab('deals'); if (!inPerson) setOfferTo(id); }} />
       )}
       {allGold && <AllGoldSheet g={g} onClose={() => setAllGold(false)} />}
+      {openClaim && g.claims.some((c) => c.id === openClaim) && (
+        <ClaimSheet g={g} claim={g.claims.find((c) => c.id === openClaim)!} name={name} onClose={() => setOpenClaim(null)} />
+      )}
       {offerTo !== null && <OfferSheet g={g} name={name} initialTo={offerTo || undefined} onClose={() => setOfferTo(null)} />}
       {myPrompt && hiddenPrompt !== myPrompt.id && !openCard ? (
         <PromptSheet key={myPrompt.id} g={g} prompt={myPrompt} name={name} diceMode={room.settings.diceMode} onHide={() => setHiddenPrompt(myPrompt.id)} />
@@ -184,8 +190,11 @@ function useAnnouncements(room: RoomView, name: NameOf) {
       if (e.kind === 'speech') toast(e.text, 'speech', name(e.actor));
       if (e.kind === 'say') toast(e.text, 'say');
       if (e.kind === 'crown' || e.kind === 'private' || e.kind === 'deal') toast(e.text, 'info');
+      // someone disputes a spoken line, or the table overrules it (not the line itself)
+      const c = e.claimId ? g.claims.find((x) => x.id === e.claimId) : undefined;
+      if (c && e.text !== c.text) toast(e.text, 'info');
     }
-  }, [g.log, name]);
+  }, [g.log, g.claims, name]);
   useEffect(() => {
     const t = g.turn?.playerId ?? null;
     if (t === g.you && lastTurn.current !== t) {

@@ -145,7 +145,12 @@ export function randomStep(g: GameState, r: () => number, now: number): GameStat
   }
   if (g.phase === 'playing' && g.turn) {
     const pid = g.turn.playerId;
-    // occasionally settle a feud or free a debtor out of turn
+    // occasionally dispute a spoken line (in person), settle a feud or free a debtor out of turn
+    const disputed = g.claims.find((c) => c.open);
+    if (disputed && r() < 0.3) {
+      const voter = g.seats.find((id) => id !== disputed.by && !disputed.votes.includes(id));
+      if (voter) return act(g, voter, { type: 'overrule', claimId: disputed.id, vote: true }, now);
+    }
     for (const id of g.seats) {
       const v = viewFor(g, id);
       if (v.legal.payBadBlood.length && r() < 0.1) return act(g, id, { type: 'payBadBlood', statusId: v.legal.payBadBlood[0] }, now);

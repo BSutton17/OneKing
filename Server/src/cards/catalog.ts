@@ -53,19 +53,19 @@ const noble: Def[] = [
     id: 'betrayal', name: 'Betrayal', copies: 4,
     printedText: "Take all gold from another noble. Requires vocal support from another noble after it's played or it has no effect. Not playable in the first round.",
     timing: 'Rounds 2–4.', targets: 'Another Noble.',
-    effect: 'Support window; with 1 supporting Noble you take all their gold unless a real Knight is in front of them.', notes: ['A8', 'C1'],
+    effect: 'You name the Noble who backed you; once they confirm, you take all their gold unless a real Knight is in front of them.', notes: ['A8', 'C1'],
   },
   {
     id: 'betray_the_king', name: 'Betray the King', copies: 2,
     printedText: "The King rolls: 1–3, you switch places and gold. 4–6, they remain king and gain 200 gold from the bank. After it's played, you must gain vocal support from TWO players or it has no effect. Not playable in the first round.",
     timing: 'Rounds 2–4.', dice: 'The King rolls (King Maker modifies it).', targets: 'The King.',
-    effect: 'Support window (2 players), King Maker window, King rolls: ≤3 you become King and swap gold; ≥4 the King gains 200.', notes: ['C1', 'C2'],
+    effect: 'You name your two backers and both confirm, King Maker window, King rolls: ≤3 you become King and swap gold; ≥4 the King gains 200.', notes: ['C1', 'C2'],
   },
   {
     id: 'council_meeting', name: 'Council Meeting', copies: 3,
     options: ['If all players vote yes, you take 100 gold from the king. If one votes no, you lose 100 to the bank', 'Draw two cards, but you must praise the king.'],
     printedText: '', targets: 'None.',
-    effect: 'Option 1: the other Nobles vote (not the King); all yes → take 100 from the King, any no → lose 100. Option 2: praise the King and draw 2 cards — refuse and draw nothing.', notes: ['A12', 'C12', 'C19'],
+    effect: 'Option 1: the other Nobles vote (not the King); all yes → take 100 from the King, any no → lose 100. Option 2: praise the King and draw 2 cards — refuse and draw nothing.', notes: ['A12', 'C12', 'C19', 'C20'],
   },
   {
     id: 'divine_right', name: 'Divine Right', copies: 1,
@@ -197,7 +197,7 @@ const king: Def[] = [
   {
     id: 'bend_the_knee', name: 'Bend the Knee', copies: 2,
     printedText: "Force a player to thank you for everything you've done for them. If they refuse, they pay the bank 300 gold. If they cannot afford to, they must thank you.",
-    targets: 'Any Noble.', effect: 'They thank you (said to the table) or pay 300.', notes: ['C11', 'C12'],
+    targets: 'Any Noble.', effect: 'They thank you (said to the table) or pay 300.', notes: ['C11', 'C12', 'C20'],
   },
   {
     id: 'helping_hand', name: 'Helping Hand', copies: 1,
@@ -217,7 +217,7 @@ const king: Def[] = [
   {
     id: 'loyal_dog', name: 'Loyal Dog', copies: 3,
     printedText: 'Give a player 100 to 300 gold (you pick) from the bank but they must say "Thank you my king, I pledge my loyalty to you my king."',
-    targets: 'Any Noble.', effect: 'They say the pledge and then gain 100/200/300 from the bank — refuse and they get nothing.', notes: ['C12'],
+    targets: 'Any Noble.', effect: 'They say the pledge and then gain 100/200/300 from the bank — refuse and they get nothing.', notes: ['C12', 'C20'],
   },
   {
     id: 'mad_king', name: 'Mad King', copies: 1,
@@ -232,7 +232,7 @@ const king: Def[] = [
   {
     id: 'royal_parrot', name: 'Royal Parrot', copies: 2,
     printedText: 'As the royal parrot, a player of your choice has to pay the bank 100 gold then repeat a sentence you give them in a high-pitched voice. 300 to the bank if they refuse.',
-    targets: 'A Noble, plus your sentence.', effect: 'They pay 100, then repeat your sentence or pay 300 more.', notes: ['C11', 'C12'],
+    targets: 'A Noble, plus your sentence.', effect: 'They pay 100, then repeat your sentence or pay 300 more.', notes: ['C11', 'C12', 'C20'],
   },
   {
     id: 'shifting_tides', name: 'Shifting Tides', copies: 1,

@@ -54,8 +54,6 @@ export function PlayerSheet({ room, id, name, onClose, onMessage, onOffer }: {
   const p = g.players.find((x) => x.id === id)!;
   const me = id === g.you;
   const tags = statusTags(g, id, name);
-  const bad = g.statuses.filter((s) => g.legal.payBadBlood.includes(s.id) && s.kind === 'badBlood');
-  const debts = g.statuses.filter((s) => g.legal.freeDebtor.includes(s.id) && s.kind === 'debt' && s.debtor === id);
   return (
     <Sheet onClose={onClose} label={`${p.name}'s details`}>
       <h2>{p.role === 'king' && <Crown />}{p.name}{me ? ' (you)' : ''}</h2>
@@ -77,6 +75,29 @@ export function PlayerSheet({ room, id, name, onClose, onMessage, onOffer }: {
           </div>
         </>
       )}
+      <Settlements g={g} name={name} only={id} />
+      {!me && (onMessage || g.negotiation) && (
+        <div className="row">
+          {onMessage && <button className="btn ghost grow" onClick={() => onMessage(id)}>Message privately</button>}
+          {g.negotiation && <button className="btn gold grow" onClick={() => onOffer(id)}>{g.mode === 'inPerson' ? 'Trade' : 'Offer a deal'}</button>}
+        </div>
+      )}
+      <button className="btn dark block" onClick={onClose}>Close</button>
+    </Sheet>
+  );
+}
+
+/**
+ * Bad Blood and Indebted payments you can make right now (any time no card is
+ * being resolved). They go through at once: nobody has to confirm receiving gold.
+ * `only`: just the ones involving that player.
+ */
+export function Settlements({ g, name, only }: { g: GameView; name: NameOf; only?: PlayerId }) {
+  const bad = g.statuses.filter((s) => s.kind === 'badBlood' && g.legal.payBadBlood.includes(s.id) && (!only || s.a === only || s.b === only));
+  const debts = g.statuses.filter((s) => s.kind === 'debt' && g.legal.freeDebtor.includes(s.id) && (!only || s.debtor === only));
+  if (!bad.length && !debts.length) return null;
+  return (
+    <>
       {bad.map((s) => s.kind === 'badBlood' && (
         <button key={s.id} className="btn gold block" onClick={() => api.act({ type: 'payBadBlood', statusId: s.id })}>
           Pay {name(s.a === g.you ? s.b : s.a)} 200 to end the Bad Blood
@@ -87,14 +108,7 @@ export function PlayerSheet({ room, id, name, onClose, onMessage, onOffer }: {
           Free {name(s.debtor)}: pay {name(s.creditor)} 200
         </button>
       ))}
-      {!me && (onMessage || g.negotiation) && (
-        <div className="row">
-          {onMessage && <button className="btn ghost grow" onClick={() => onMessage(id)}>Message privately</button>}
-          {g.negotiation && <button className="btn gold grow" onClick={() => onOffer(id)}>{g.mode === 'inPerson' ? 'Trade' : 'Offer a deal'}</button>}
-        </div>
-      )}
-      <button className="btn dark block" onClick={onClose}>Close</button>
-    </Sheet>
+    </>
   );
 }
 

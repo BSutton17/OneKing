@@ -128,6 +128,17 @@ export function acceptOffer(g: GameState, by: PlayerId, offerId: unknown, cardId
   }
   g.negotiation!.offers = offers.filter((x) => x !== o && !touches(x, o, card, disc));
   log(g, 'deal', `Deal: ${parts.join('; ')}`, { actor: by });
+  endFeud(g, from.id, to.id, o.giveGold);
+  endFeud(g, to.id, from.id, o.askGold);
+}
+
+/** Bad Blood ends once one of the pair gives the other 200 — gold handed over in a deal counts. */
+function endFeud(g: GameState, payer: PlayerId, payee: PlayerId, amount: number) {
+  if (amount < 200) return;
+  const s = g.statuses.find((x) => x.kind === 'badBlood' && ((x.a === payer && x.b === payee) || (x.a === payee && x.b === payer)));
+  if (!s) return;
+  g.statuses = g.statuses.filter((x) => x !== s);
+  log(g, 'info', `${nameOf(g, payer)} gave ${nameOf(g, payee)} ${amount} — the Bad Blood between them is over`);
 }
 
 /** Other open offers that relied on a card that just moved. */

@@ -60,6 +60,9 @@ describe('lobby', () => {
   test('clear errors for a missing name, an unknown code, a full room and a started game', () => {
     const { m, code } = setup(8);
     assert.deepEqual(m.join({ socketId: 'x', name: '', code }), { ok: false, error: 'Please enter your name' });
+    // names that would pass for the game in the log ("the bank −300")
+    for (const name of ['the bank', 'Bank', 'The King', 'Zed (King)']) assert.match((m.join({ socketId: 'x', name, code }) as { error: string }).error, /confusing/, name);
+    assert.match((m.create({ socketId: 'x', name: 'THE BANK' }) as { error: string }).error, /confusing/);
     assert.match((m.join({ socketId: 'x', name: 'Zed', code: 'ABCD' }) as { error: string }).error, /4 digits/);
     const unused = code === '0000' ? '0001' : '0000';
     assert.match((m.join({ socketId: 'x', name: 'Zed', code: unused }) as { error: string }).error, /No room/);

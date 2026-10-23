@@ -138,7 +138,7 @@ describe('Knights and protections', () => {
     g = placeOne(g);
     const me = g.turn!.playerId;
     const backer = nobles(g).find((x) => x !== me && x !== victim)!;
-    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betrayal'), setup: { target: victim } });
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:betrayal'), setup: { target: victim, backer } });
     g = respond(g, backer, {});
     assert.equal(gold(g, victim), 0);
   });
@@ -186,6 +186,38 @@ describe('lasting effects', () => {
     fails(g, me, { type: 'payBadBlood', statusId: status.id }, /isn't yours/);
     g = act(g, a, { type: 'payBadBlood', statusId: status.id });
     assert.ok(!g.statuses.some((s) => s.kind === 'badBlood'));
+  });
+
+  test('Bad Blood also ends when one of the two hands the other 200+ in a deal', () => {
+    let g = game(5, 61);
+    g = toTurnOf(g, nobles(g)[0]);
+    const me = g.turn!.playerId;
+    const [a, b, c] = nobles(g).filter((x) => x !== me);
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:bad_blood'), setup: { a, b } });
+    g = toNegotiation(g);
+    g = act(g, a, { type: 'offer', to: b, giveGold: 100 });
+    g = act(g, b, { type: 'acceptOffer', offerId: g.negotiation!.offers[0].id });
+    assert.ok(g.statuses.some((s) => s.kind === 'badBlood'), '100 is not enough');
+    g = act(g, a, { type: 'offer', to: c, giveGold: 200 });
+    g = act(g, c, { type: 'acceptOffer', offerId: g.negotiation!.offers[0].id });
+    assert.ok(g.statuses.some((s) => s.kind === 'badBlood'), 'paying someone else does not count');
+    g = act(g, b, { type: 'offer', to: a, giveGold: 200 });
+    g = act(g, a, { type: 'acceptOffer', offerId: g.negotiation!.offers[0].id });
+    assert.ok(!g.statuses.some((s) => s.kind === 'badBlood'));
+    assert.ok(g.log.some((e) => /the Bad Blood between them is over/.test(e.text)));
+    const before = gold(g, me);
+    g = tick(g, g.negotiation!.endsAt)!;
+    assert.equal(gold(g, me), before, 'no payout next round');
+  });
+
+  test('an offer nobody confirmed tells both players it expired', () => {
+    let g = toNegotiation(game(5, 63));
+    const [a, b] = nobles(g);
+    g = act(g, a, { type: 'offer', to: b, giveGold: 200 });
+    g = tick(g, g.negotiation!.endsAt)!;
+    assert.ok(viewFor(g, a).log.some((e) => e.kind === 'private' && /never confirmed your offer/.test(e.text)));
+    assert.ok(viewFor(g, b).log.some((e) => e.kind === 'private' && /never answered/.test(e.text)));
+    assert.equal(gold(g, b), 600, 'nothing moved');
   });
 
   test('Indebted: on 3-6 the debtor pays 100 each new round; anyone else can free them for 200', () => {

@@ -1,6 +1,7 @@
 // What each King card does. Printed text: cards/catalog.ts.
 
 import { discard, draw, isRoyalBomb, refill, removeFromHand } from '../cards.js';
+import { claim } from '../claims.js';
 import { bankGain, bankLoss } from '../gold.js';
 import { canTake, take } from '../protection.js';
 import { ask, choiceOf, pickOf, rollOf, voteOf } from '../prompts.js';
@@ -70,8 +71,12 @@ export const kingCards: Record<string, CardHandler> = {
       if (choiceOf(p, t) === 'refuse') {
         say(g, `${n(g, t)} refuses to thank the King`);
         bankLoss(g, t, 300, src(res));
-      } else if (g.config.mode === 'inPerson') log(g, 'say', `${n(g, t)} must thank ${n(g, res.actor)} for everything they've done for them.`, { actor: t });
-      else log(g, 'speech', `Thank you, my King, for everything you've done for me.`, { actor: t });
+      } else if (g.config.mode === 'inPerson') {
+        claim(g, {
+          by: t, cardKey: res.cardKey!, text: `${n(g, t)} thanked ${n(g, res.actor)} for everything they've done for them`,
+          penalty: `${n(g, t)} pays the bank 300`, undo: { kind: 'gold', amount: 300, source: src(res) },
+        });
+      } else log(g, 'speech', `Thank you, my King, for everything you've done for me.`, { actor: t });
     },
   },
 
@@ -127,8 +132,13 @@ export const kingCards: Record<string, CardHandler> = {
       const t = target(res);
       if (choiceOf(p, t) !== 'say') return say(g, `${n(g, t)} refuses to pledge loyalty and gets nothing`);
       if (g.config.mode === 'virtual') log(g, 'speech', LOYAL_DOG_LINE, { actor: t });
-      else say(g, `${n(g, t)} pledged their loyalty`);
-      bankGain(g, t, Number(res.setup.amount), src(res));
+      const got = bankGain(g, t, Number(res.setup.amount), src(res));
+      if (g.config.mode === 'inPerson') {
+        claim(g, {
+          by: t, cardKey: res.cardKey!, text: `${n(g, t)} pledged their loyalty`,
+          penalty: `${n(g, t)} gives the ${got} gold back to the bank`, undo: { kind: 'gold', amount: got, source: src(res) },
+        });
+      }
     },
   },
 
@@ -182,7 +192,12 @@ export const kingCards: Record<string, CardHandler> = {
         say(g, `${n(g, t)} refuses to repeat it`);
         bankLoss(g, t, 300, src(res));
       } else if (res.setup.sentence) log(g, 'speech', String(res.setup.sentence).toUpperCase(), { actor: t });
-      else log(g, 'say', `${n(g, t)} repeats the King's sentence in a high-pitched voice`, { actor: t });
+      else {
+        claim(g, {
+          by: t, cardKey: res.cardKey!, text: `${n(g, t)} repeated the King's sentence in a high-pitched voice`,
+          penalty: `${n(g, t)} pays the bank 300`, undo: { kind: 'gold', amount: 300, source: src(res) },
+        });
+      }
     },
   },
 

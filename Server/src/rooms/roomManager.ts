@@ -61,6 +61,16 @@ export function normalizeName(raw: unknown): string {
   return typeof raw === 'string' ? raw.replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim().slice(0, MAX_NAME) : '';
 }
 
+// names that would read as part of the game in the log ("the bank −300", "the King plays…")
+const RESERVED_NAMES = /^(the )?(bank|king|queen|crown|table|noble|nobles|game|everyone|nobody|you|private)$|\((king|you)\)/i;
+
+/** Why `name` can't be used, or null. */
+function nameProblem(name: string): string | null {
+  if (!name) return 'Please enter your name';
+  if (RESERVED_NAMES.test(name)) return `"${name}" would be confusing in the game log — pick another name`;
+  return null;
+}
+
 export function normalizeCode(raw: unknown): string | null {
   if (typeof raw !== 'string' && typeof raw !== 'number') return null;
   const code = String(raw).replace(/\s+/g, '');
@@ -112,7 +122,8 @@ export class RoomManager {
 
   create({ socketId, name }: { socketId: string; name: unknown }): Ok<{ code: string; token: string; playerId: string }> {
     const clean = normalizeName(name);
-    if (!clean) return { ok: false, error: 'Please enter your name' };
+    const problem = nameProblem(clean);
+    if (problem) return { ok: false, error: problem };
     this.leave(socketId);
     const code = this.newCode();
     const now = this.now();
@@ -129,7 +140,8 @@ export class RoomManager {
 
   join({ socketId, name, code }: { socketId: string; name: unknown; code: unknown }): Ok<{ code: string; token: string; playerId: string }> {
     const clean = normalizeName(name);
-    if (!clean) return { ok: false, error: 'Please enter your name' };
+    const problem = nameProblem(clean);
+    if (problem) return { ok: false, error: problem };
     const c = normalizeCode(code);
     const room = c ? this.rooms.get(c) : undefined;
     if (!room) return { ok: false, error: c ? `No room with code ${c}` : 'Room codes are 4 digits, like 0427' };
