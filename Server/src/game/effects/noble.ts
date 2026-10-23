@@ -176,22 +176,32 @@ export const noble: Record<string, CardHandler> = {
   council_meeting: {
     start(g, res) {
       if (res.option === 1) {
-        announce(g, res, 'draws two cards and must praise the King');
-        draw(g, res.actor, 2);
-        speak(g, res, {
-          title: 'Praise the King', text: 'You must praise the King.', who: [res.actor], line: 'Long live the King!', allowCustom: true,
-          instruction: `${n(g, res.actor)} must praise ${n(g, kingOf(g).id)}.`,
+        // the two cards are only drawn once the praise is given (C12)
+        announce(g, res, 'must praise the King to draw two cards');
+        ask(g, res, {
+          kind: 'choice', title: 'Praise the King', who: [res.actor], defaultValue: 'refuse', ms: g.config.responseMs,
+          text: g.config.mode === 'inPerson'
+            ? `Praise ${n(g, kingOf(g).id)} out loud, then draw two cards — or refuse and draw nothing.`
+            : `Praise ${n(g, kingOf(g).id)} to draw two cards — or refuse and draw nothing.`,
+          options: [{ value: 'praise', label: 'I praised the King — draw 2' }, { value: 'refuse', label: 'Refuse (no cards)' }],
         });
         return;
       }
-      announce(g, res, 'everyone votes');
+      // the King has no say in a vote on taking his own gold: only the other Nobles vote
+      announce(g, res, 'the Nobles vote');
       ask(g, res, {
-        kind: 'vote', title: 'Council Meeting', secret: true, who: others(g, res.actor), ms: g.config.voteMs,
-        text: `If ALL vote yes, ${n(g, res.actor)} takes 100 gold from the King. If anyone votes no, ${n(g, res.actor)} loses 100.`,
+        kind: 'vote', title: 'Council Meeting', secret: true, who: otherNobles(g, res.actor), ms: g.config.voteMs,
+        text: `If ALL the Nobles vote yes, ${n(g, res.actor)} takes 100 gold from the King. If anyone votes no, ${n(g, res.actor)} loses 100.`,
       });
     },
     onPrompt(g, res, p) {
-      if (res.option === 1) return;
+      if (res.option === 1) {
+        if (choiceOf(p, res.actor) !== 'praise') return say(g, `${n(g, res.actor)} refuses to praise the King and draws nothing`);
+        if (g.config.mode === 'virtual') log(g, 'speech', 'Long live the King!', { actor: res.actor });
+        else say(g, `${n(g, res.actor)} praised the King`);
+        draw(g, res.actor, 2);
+        return;
+      }
       const no = p.who.filter((id) => !voteOf(p, id));
       say(g, no.length ? `Voted no: ${no.map((id) => n(g, id)).join(', ')}` : 'Everyone voted yes');
       if (no.length) bankLoss(g, res.actor, 100, src(res));

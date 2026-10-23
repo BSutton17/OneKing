@@ -36,7 +36,7 @@ describe('changing the King (Rules p15)', () => {
     const luckyHand = [...g.players[lucky].hand];
     const kingHand = [...g.players[k].hand];
     g = act(g, k, { type: 'play', cardId: give(g, k, 'king:loyal_dog'), setup: { target: lucky, amount: '200' } });
-    g = respond(g, lucky, { text: '' });
+    g = respond(g, lucky, { value: 'say' });
     assert.equal(king(g), lucky);
     assert.equal(g.players[lucky].role, 'king');
     assert.equal(g.players[k].role, 'noble');
@@ -56,6 +56,8 @@ describe('changing the King (Rules p15)', () => {
     const n = nobles(g)[0];
     g.players[n].gold = 800;
     g = act(g, k, { type: 'play', cardId: give(g, k, 'king:loyal_dog'), setup: { target: n, amount: '200' } });
+    g = respond(g, n, { value: 'say' });
+    assert.equal(g.players[n].gold, 1000);
     assert.equal(king(g), k);
   });
 
@@ -106,7 +108,7 @@ describe('changing the King (Rules p15)', () => {
     g.players[n].gold = 900;
     g = act(g, k, { type: 'play', cardId: give(g, k, 'king:loyal_dog'), setup: { target: n, amount: '200' } });
     assert.equal(king(g), k, 'no crown change in the middle of a card');
-    g = respond(g, n, { text: '' });
+    g = respond(g, n, { value: 'say' });
     assert.equal(king(g), n);
     assert.ok(g.discard.noble.includes(bomb));
     assert.ok(!g.players[k].hand.includes(bomb), 'the old King did not inherit it');

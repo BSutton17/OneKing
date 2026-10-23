@@ -65,7 +65,7 @@ describe('turns and rounds (Rules p8, p11-p14)', () => {
       const id = g.players[k].hand.find((c) => g.cards[c].key === 'king:loyal_dog')!;
       g = act(g, k, { type: 'play', cardId: id, setup: { target, amount: '100' } });
       // the pledge prompt
-      g = act(g, target, { type: 'respond', promptId: g.resolution!.prompt!.id, response: { text: '' } });
+      g = act(g, target, { type: 'respond', promptId: g.resolution!.prompt!.id, response: { value: 'say' } });
     }
     assert.equal(g.players[k].hand.length, 8);
     assert.equal(g.turn!.playerId, g.seats[(g.kingSeat + 1) % 5]);

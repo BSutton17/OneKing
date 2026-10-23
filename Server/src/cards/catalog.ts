@@ -65,7 +65,7 @@ const noble: Def[] = [
     id: 'council_meeting', name: 'Council Meeting', copies: 3,
     options: ['If all players vote yes, you take 100 gold from the king. If one votes no, you lose 100 to the bank', 'Draw two cards, but you must praise the king.'],
     printedText: '', targets: 'None.',
-    effect: 'Option 1: everyone else votes; all yes → take 100 from the King, any no → lose 100. Option 2: draw 2 cards and say your praise.', notes: ['A12', 'C12'],
+    effect: 'Option 1: the other Nobles vote (not the King); all yes → take 100 from the King, any no → lose 100. Option 2: praise the King and draw 2 cards — refuse and draw nothing.', notes: ['A12', 'C12', 'C19'],
   },
   {
     id: 'divine_right', name: 'Divine Right', copies: 1,
@@ -217,7 +217,7 @@ const king: Def[] = [
   {
     id: 'loyal_dog', name: 'Loyal Dog', copies: 3,
     printedText: 'Give a player 100 to 300 gold (you pick) from the bank but they must say "Thank you my king, I pledge my loyalty to you my king."',
-    targets: 'Any Noble.', effect: 'They gain 100/200/300 from the bank and say the pledge.', notes: ['C12'],
+    targets: 'Any Noble.', effect: 'They say the pledge and then gain 100/200/300 from the bank — refuse and they get nothing.', notes: ['C12'],
   },
   {
     id: 'mad_king', name: 'Mad King', copies: 1,

@@ -10,17 +10,44 @@ import { act, give, king, newGame, nobles } from './helpers.js';
 const inPerson = (n = 5, seed = 81) => newGame(n, { seed, config: { mode: 'inPerson', diceMode: 'physical' } });
 const prompt = (g: GameState) => g.resolution!.prompt!;
 
+/** Finish the King's turn with face-down cards so a Noble is up. */
+function toNobleTurn(g: GameState): GameState {
+  while (g.players[g.turn!.playerId].role === 'king') {
+    const pid = g.turn!.playerId;
+    const c = viewFor(g, pid).hand.find((h) => h.place.ok)!;
+    g = act(g, pid, { type: 'place', cardId: c.id, targetId: c.place.targets[0] });
+  }
+  return g;
+}
+
 describe('in-person mode', () => {
-  test('spoken cards show an instruction to everyone and do not wait for anyone', () => {
+  test('spoken cards with nothing riding on them show an instruction to everyone and do not wait', () => {
     let g = inPerson();
     const k = king(g);
-    const n = nobles(g)[0];
-    g = act(g, k, { type: 'play', cardId: give(g, k, 'king:loyal_dog'), setup: { target: n, amount: '100' } });
+    g = toNobleTurn(g);
+    const me = g.turn!.playerId;
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:actors'), option: 0, setup: {} });
     assert.equal(g.resolution, null, 'resolved at once');
-    assert.equal(g.players[n].gold, 700);
     const say = g.log.filter((e) => e.kind === 'say').at(-1)!;
-    assert.match(say.text, /must say: “Thank you my king/);
+    assert.match(say.text, /must thank/);
     assert.equal(viewFor(g, nobles(g)[2]).log.at(-1)!.text, say.text, 'everyone sees it');
+    void k;
+  });
+
+  test('Loyal Dog pays only once the line is said — the Noble can refuse and get nothing', () => {
+    let g = inPerson();
+    const k = king(g);
+    const [a, b] = nobles(g);
+    g = act(g, k, { type: 'play', cardId: give(g, k, 'king:loyal_dog'), setup: { target: a, amount: '200' } });
+    assert.equal(prompt(g).kind, 'choice');
+    assert.deepEqual(prompt(g).who, [a]);
+    assert.match(prompt(g).text, /Say out loud: “Thank you my king/);
+    assert.equal(g.players[a].gold, 600, 'nothing paid yet');
+    g = act(g, a, { type: 'respond', promptId: prompt(g).id, response: { value: 'say' } });
+    assert.equal(g.players[a].gold, 800);
+    g = act(g, k, { type: 'play', cardId: give(g, k, 'king:loyal_dog'), setup: { target: b, amount: '300' } });
+    g = act(g, b, { type: 'respond', promptId: prompt(g).id, response: { value: 'refuse' } });
+    assert.equal(g.players[b].gold, 600, 'refused: no gold');
   });
 
   test("the Royal Parrot's sentence is spoken by the King, not typed — refusing still costs 300", () => {
@@ -44,9 +71,9 @@ describe('in-person mode', () => {
   });
 
   test('virtual mode asks for the typed line instead', () => {
-    let g = newGame(5, { seed: 81 });
-    const k = king(g);
-    g = act(g, k, { type: 'play', cardId: give(g, k, 'king:loyal_dog'), setup: { target: nobles(g)[0], amount: '100' } });
+    let g = toNobleTurn(newGame(5, { seed: 81 }));
+    const me = g.turn!.playerId;
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:actors'), option: 0, setup: {} });
     assert.equal(prompt(g).kind, 'speech');
   });
 });

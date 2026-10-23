@@ -6,10 +6,11 @@ import { canTake, take } from '../protection.js';
 import { ask, choiceOf, pickOf, rollOf, voteOf } from '../prompts.js';
 import { allIds, log, nameOf, nextId, nobleIds, seatFrom } from '../state.js';
 import type { GameState, PlayerId, Prompt, Resolution } from '../types.js';
-import { amountField, announce, lookable, playerField, say, speak, src, target } from './kit.js';
+import { amountField, announce, lookable, playerField, say, src, target } from './kit.js';
 import type { CardHandler } from './types.js';
 
 const n = (g: GameState, id: PlayerId) => nameOf(g, id);
+const LOYAL_DOG_LINE = 'Thank you my king, I pledge my loyalty to you my king.';
 const rolled = (g: GameState, p: Prompt, ids: PlayerId[]) => log(g, 'dice', ids.map((id) => `${n(g, id)} rolls ${rollOf(p, id)}`).join(', '));
 const rollFor = (g: GameState, res: Resolution, who: PlayerId[], title: string, text: string) => ask(g, res, { kind: 'roll', title, text, who, ms: g.config.rollMs });
 
@@ -113,12 +114,21 @@ export const kingCards: Record<string, CardHandler> = {
     fields: (g) => [playerField(g, 'target', 'Give gold to', nobleIds(g)), amountField('amount', 'How much?', [100, 200, 300])],
     start(g, res) {
       const t = target(res);
-      announce(g, res, `${n(g, t)} gets ${res.setup.amount}`);
-      bankGain(g, t, Number(res.setup.amount), src(res));
-      speak(g, res, {
-        title: 'Loyal Dog', text: 'You must say:', who: [t], line: 'Thank you my king, I pledge my loyalty to you my king.',
-        instruction: `${n(g, t)} must say: “Thank you my king, I pledge my loyalty to you my king.”`,
+      const amount = Number(res.setup.amount);
+      // the gold is only paid once the line is said (C12)
+      announce(g, res, `${n(g, t)} is offered ${amount} to pledge loyalty`);
+      ask(g, res, {
+        kind: 'choice', title: 'Loyal Dog', who: [t], defaultValue: 'refuse', ms: g.config.responseMs,
+        text: `${g.config.mode === 'inPerson' ? 'Say out loud' : 'Say'}: “${LOYAL_DOG_LINE}” and take ${amount} gold from the bank — or refuse and get nothing.`,
+        options: [{ value: 'say', label: `I said it — take ${amount}` }, { value: 'refuse', label: 'Refuse (no gold)' }],
       });
+    },
+    onPrompt(g, res, p) {
+      const t = target(res);
+      if (choiceOf(p, t) !== 'say') return say(g, `${n(g, t)} refuses to pledge loyalty and gets nothing`);
+      if (g.config.mode === 'virtual') log(g, 'speech', LOYAL_DOG_LINE, { actor: t });
+      else say(g, `${n(g, t)} pledged their loyalty`);
+      bankGain(g, t, Number(res.setup.amount), src(res));
     },
   },
 

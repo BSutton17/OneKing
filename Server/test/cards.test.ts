@@ -59,6 +59,44 @@ describe('dotted-line cards (Rules p10)', () => {
   });
 });
 
+describe('Council Meeting', () => {
+  let g: GameState;
+  let me: string;
+  beforeEach(() => {
+    g = toNobleTurn(game());
+    me = g.turn!.playerId;
+  });
+
+  test('only the other Nobles vote — the King cannot vote to protect his gold', () => {
+    const k = king(g);
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:council_meeting'), option: 0, setup: {} });
+    assert.deepEqual([...prompt(g).who].sort(), nobles(g).filter((id) => id !== me).sort());
+    assert.ok(!prompt(g).who.includes(k));
+    fails(g, k, { type: 'respond', promptId: prompt(g).id, response: { yes: false } });
+    g = answerAll(g, () => ({ yes: true }));
+    assert.equal(gold(g, me), 700);
+    assert.equal(gold(g, k), 900);
+  });
+
+  test('one Noble voting no costs the player 100', () => {
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:council_meeting'), option: 0, setup: {} });
+    const naysayer = prompt(g).who[0];
+    g = answerAll(g, (pid) => ({ yes: pid !== naysayer }));
+    assert.equal(gold(g, me), 500);
+  });
+
+  test('the two cards are only drawn once the King has been praised; refusing draws nothing', () => {
+    g = act(g, me, { type: 'play', cardId: give(g, me, 'noble:council_meeting'), option: 1, setup: {} });
+    assert.equal(prompt(g).kind, 'choice');
+    assert.deepEqual(prompt(g).who, [me]);
+    const before = g.players[me].hand.length;
+    const refused = respond(g, me, { value: 'refuse' });
+    assert.equal(refused.players[me].hand.length, before);
+    const praised = respond(g, me, { value: 'praise' });
+    assert.equal(praised.players[me].hand.length, before + 2);
+  });
+});
+
 describe('dice cards', () => {
   test('Meat for Meat: higher roll collects 200; a tie does nothing', () => {
     let g = toNobleTurn(game());

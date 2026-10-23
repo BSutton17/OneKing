@@ -87,13 +87,14 @@ front before the card resolves).
 * **C9 Sub Rosa (King).** On a 4+ the King picks one card from the hand he looked at to discard (not the Royal Bomb); the victim draws a replacement.
 * **C10 Anchor.** The King picks the target Noble and "the player of your choice" up front; the target chooses which happens.
 * **C11 Allies, Grudge, Loyalty, Tithe, Debt Collector, Bend the Knee, Royal Parrot, We Ride Together** — the other player's decision is a prompt with a timeout default: Allies → you gain 100; Grudge → disagree; Loyalty → they pay you; Tithe / Debt Collector → a random eligible player; Bend the Knee → thank; Royal Parrot → repeat; We Ride Together → no split.
-* **C12 Spoken/social cards** (Actors, Council Meeting's praise, Loyalty's pledge, Loyal Dog, Bend the Knee, Royal Parrot). In person they are said out loud (M1). Online, the player taps (or types) their line and it is posted to the table as a highlighted "speech". Loyal Dog's gold is paid whether or not they speak. Actors has no gold effect, so nobody is forced to respond.
+* **C12 Spoken/social cards** (Actors, Council Meeting's praise, Loyalty's pledge, Loyal Dog, Bend the Knee, Royal Parrot). In person they are said out loud (M1). Online, the player taps (or types) their line and it is posted to the table as a highlighted "speech". When something rides on the line, the speaker taps whether they said it, and the reward only comes after: **Loyal Dog's gold** and **Council Meeting's two cards** are paid once they confirm, and "Refuse" gets them nothing (default if they don't answer: refuse). Bend the Knee and Royal Parrot already work this way, with their printed 300 penalty. Actors and Loyalty's pledge change no gold, so they stay an instruction to the table.
 * **C13 Isolation vs looking.** "Look at your cards" covers your hand and face-down cards in front of you.
 * **C14 Shifting Tides** restricts only the two named Nobles as takers; other players may still take from them.
 * **C15 Royal Bomb** can be given away only as one side of a 1-for-1 card exchange (rule 17) or discarded as part of an accepted deal, both during negotiation. It's discarded before the hand swap when its holder becomes King.
 * **C16 Targets.** Where a card says "a noble"/"a player" and targeting yourself would be meaningless (Allies, Betrayal, Meat for Meat, Wrath, Tithe, Grudge's victim…), you can't pick yourself. Cards that say "a player of your choice" may target the King unless the effect would be meaningless (Loyalty's second option, which pays the King). The full per-card target list is in the catalog.
 * **C17 Icarus "if you can afford it"** = you have at least 100 × (number of other Nobles).
 * **C18 Unprotected** removes face-down cards in front of every player except you; removed cards are discarded unrevealed.
+* **C19 Council Meeting's vote** ("if all players vote yes, you take 100 gold from the king") is a vote of the **other Nobles** only. The King is the one losing the gold, so letting him vote would let him veto every Council Meeting.
 
 ### Same room vs apart (host setting)
 
