@@ -39,7 +39,7 @@ export const say = (g: GameState, text: string) => log(g, 'info', text);
  */
 export function speak(g: GameState, res: Resolution, o: { who: PlayerId[]; line: string; instruction: string; title: string; text: string; allowCustom?: boolean }): void {
   if (g.config.mode === 'inPerson') {
-    log(g, 'say', `📣 ${o.instruction}`, { actor: o.who.length === 1 ? o.who[0] : undefined });
+    log(g, 'say', o.instruction, { actor: o.who.length === 1 ? o.who[0] : undefined });
     return;
   }
   ask(g, res, { kind: 'speech', title: o.title, text: o.text, who: o.who, speech: o.line, allowCustom: o.allowCustom, ms: g.config.speechMs });

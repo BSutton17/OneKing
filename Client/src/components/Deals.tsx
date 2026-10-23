@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { NameOf } from '../lib/game';
 import type { GameView, Offer, PlayerId, RoomView } from '../lib/types';
 import { api, useStore } from '../net/socket';
-import { CardImg, Countdown, Sheet } from './common';
+import { CardImg, Countdown, Crown, Sheet } from './common';
 
 const LIMIT = 400;
 
@@ -171,9 +171,9 @@ export function TradePane({ room, name, openIncoming }: { room: RoomView; name: 
         </>
       )}
       <div className="trade-actions">
-        <button className="btn gold" disabled={!open} onClick={() => setForm('gold')}>💰 Give gold</button>
-        <button className="btn" disabled={!open} onClick={() => setForm('swap')}>🔄 Swap a card</button>
-        <button className="btn ghost" disabled={!open} onClick={() => setForm('discard')}>🗑️ Discard a card</button>
+        <button className="btn gold" disabled={!open} onClick={() => setForm('gold')}>Give gold</button>
+        <button className="btn" disabled={!open} onClick={() => setForm('swap')}>Swap a card</button>
+        <button className="btn ghost" disabled={!open} onClick={() => setForm('discard')}>Discard a card</button>
       </div>
       <p className="faint center" style={{ fontSize: '.72rem' }}>Deals aren't binding: a "gold for a card" deal is two handovers — and either of you can betray the other halfway.</p>
       <Incoming g={g} name={name} open={openIncoming} />
@@ -212,7 +212,7 @@ function TradeSheet({ g, kind, name, onClose }: { g: GameView; kind: TradeKind; 
           return (
             <button key={p.id} className={`chip${to === p.id ? ' on' : ''}`} disabled={blocked} title={blocked ? "King and Noble cards can't change hands" : undefined}
               onClick={() => { setTo(p.id); setGold(0); }}>
-              {p.role === 'king' ? '👑 ' : ''}{p.name}
+              {p.role === 'king' && <Crown />}{p.name}
             </button>
           );
         })}
@@ -333,7 +333,7 @@ function Chat({ room, name, thread, setThread }: { room: RoomView; name: NameOf;
       <div className="threads" role="tablist" aria-label="Conversations">
         <button role="tab" aria-selected={thread === null} className={`chip${thread === null ? ' on' : ''}`} onClick={() => setThread(null)}>Everyone</button>
         {room.members.filter((m) => m.id !== you).map((m) => (
-          <button key={m.id} role="tab" aria-selected={thread === m.id} className={`chip${thread === m.id ? ' on' : ''}`} onClick={() => setThread(m.id)}>🔒 {m.name}</button>
+          <button key={m.id} role="tab" aria-selected={thread === m.id} className={`chip${thread === m.id ? ' on' : ''}`} onClick={() => setThread(m.id)}>{m.name}</button>
         ))}
       </div>
       <p className="faint center" style={{ fontSize: '.72rem' }}>{thread ? `Private — only you and ${name(thread)} see this` : 'Public — the whole table sees this'}</p>

@@ -37,7 +37,7 @@ export function crown(g: GameState, newKingId: PlayerId, opts: { swapGold?: bool
   [nu.hand, old.hand] = [old.hand, nu.hand];
   nu.role = 'king';
   old.role = 'noble';
-  log(g, 'crown', `👑 ${nu.name} is the new King! (${opts.why}) ${old.name} becomes a Noble — they swap seats and cards.`, { actor: nu.id });
+  log(g, 'crown', `${nu.name} is the new King! (${opts.why}) ${old.name} becomes a Noble — they swap seats and cards.`, { actor: nu.id });
   refill(g, nu.id);
   refill(g, old.id);
 

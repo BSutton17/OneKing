@@ -66,14 +66,14 @@ export function PromptSheet({ g, prompt, name, diceMode, onHide }: { g: GameView
 
       {prompt.kind === 'vote' && (
         <div className="row">
-          <button className="btn gold grow" disabled={busy} onClick={() => answer({ yes: true })}>{res.cardKey === 'king:snakes' ? '✋ Raise hand' : 'Yes'}</button>
+          <button className="btn gold grow" disabled={busy} onClick={() => answer({ yes: true })}>{res.cardKey === 'king:snakes' ? 'Raise hand' : 'Yes'}</button>
           <button className="btn ghost grow" disabled={busy} onClick={() => answer({ yes: false })}>{res.cardKey === 'king:snakes' ? 'Keep it down' : 'No'}</button>
         </div>
       )}
 
       {prompt.kind === 'support' && (
         <div className="row">
-          <button className="btn gold grow" disabled={busy} onClick={() => answer({})}>📣 I support it</button>
+          <button className="btn gold grow" disabled={busy} onClick={() => answer({})}>I support it</button>
           <button className="btn ghost grow" disabled={busy} onClick={() => answer({ declined: true })}>Stay quiet</button>
         </div>
       )}
@@ -86,7 +86,7 @@ export function PromptSheet({ g, prompt, name, diceMode, onHide }: { g: GameView
           </div>
         </div>
       ) : (
-        <button className="btn gold block roll-btn" disabled={busy} onClick={() => answer({})}>🎲 Roll the die</button>
+        <button className="btn gold block roll-btn" disabled={busy} onClick={() => answer({})}>Roll the die</button>
       ))}
 
       {prompt.kind === 'kingMaker' && (
@@ -119,7 +119,7 @@ export function PromptSheet({ g, prompt, name, diceMode, onHide }: { g: GameView
           ) : (
             <p className="center" style={{ fontStyle: 'italic', fontSize: '1.05rem' }}>“{prompt.speech}”</p>
           )}
-          <button className="btn gold block" disabled={busy} onClick={() => answer({ text })}>🗣️ Say it to the table</button>
+          <button className="btn gold block" disabled={busy} onClick={() => answer({ text })}>Say it to the table</button>
         </div>
       )}
 
@@ -138,9 +138,9 @@ export function Answers({ prompt, name }: { prompt: PromptView; name: NameOf }) 
         const r = prompt.responses[id];
         const done = prompt.answered.includes(id);
         let what = '';
-        if (r?.kind === 'roll') what = ` 🎲${r.value}`;
+        if (r?.kind === 'roll') what = ` rolled ${r.value}`;
         else if (r?.kind === 'vote') what = r.yes ? ' ✓' : ' ✗';
-        else if (r?.kind === 'support') what = r.declined ? ' quiet' : ' 📣';
+        else if (r?.kind === 'support') what = r.declined ? ' quiet' : ' supports';
         else if (r?.kind === 'kingMaker') what = r.side ? ` King Maker: ${r.side}` : ' pass';
         else if (r?.kind === 'player') what = ` → ${name(r.playerId)}`;
         else if (done) what = ' ✓';

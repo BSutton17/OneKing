@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { BackImg } from '../components/common';
-import { Credits } from '../components/Credits';
 import type { RoomView } from '../lib/types';
 import { api } from '../net/socket';
 
@@ -44,7 +43,7 @@ export function Lobby({ room }: { room: RoomView }) {
         <h3>Table rules</h3>
         <p className="section-title">Where is everyone?</p>
         <div className="chips" role="radiogroup" aria-label="Game mode">
-          {([['inPerson', '🪑 Same room'], ['virtual', '🌐 Apart (online)']] as const).map(([m, label]) => (
+          {([['inPerson', 'Same room'], ['virtual', 'Apart (online)']] as const).map(([m, label]) => (
             <button key={m} role="radio" aria-checked={room.settings.mode === m} className={`chip${room.settings.mode === m ? ' on' : ''}`} disabled={!isHost} onClick={() => api.settings({ mode: m })}>
               {label}
             </button>
@@ -67,7 +66,7 @@ export function Lobby({ room }: { room: RoomView }) {
         <div className="chips" role="radiogroup" aria-label="Dice">
           {(['digital', 'physical'] as const).map((d) => (
             <button key={d} role="radio" aria-checked={room.settings.diceMode === d} className={`chip${room.settings.diceMode === d ? ' on' : ''}`} disabled={!isHost} onClick={() => api.settings({ diceMode: d })}>
-              {d === 'digital' ? '🎲 Rolled for you' : '✋ Real dice (type your roll)'}
+              {d === 'digital' ? 'Rolled for you' : 'Real dice (type your roll)'}
             </button>
           ))}
         </div>
@@ -81,7 +80,6 @@ export function Lobby({ room }: { room: RoomView }) {
         <p className="muted center">Waiting for the host to start…</p>
       )}
       <button className="btn ghost small" onClick={() => api.leave()}>Leave room</button>
-      <Credits />
     </main>
   );
 }

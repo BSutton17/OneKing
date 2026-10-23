@@ -10,13 +10,6 @@ rules; each phone only receives what that player is allowed to see.
 - Client: <https://onekingonecrown.netlify.app>
 - Server: <https://oneking-3290b1569525.herokuapp.com>
 
-> **Credit & licence.** One King One Crown is designed by its original creators
-> ([onecrown.store](https://www.onecrown.store)). The rules, card art, character
-> cards and round tracker come from their official print-and-play edition,
-> shared under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
-> This adaptation must stay **free and non-commercial**, keep this attribution,
-> and be shared under the same licence. It is not affiliated with the designers.
-
 ## Quick start
 
 Needs Node 24.
@@ -36,11 +29,11 @@ browser windows.
 | | **Same room** (default) | **Apart (online)** |
 |---|---|---|
 | Talking | Out loud. No chat at all. | Table chat + private messages. |
-| Spoken cards (Actors, Loyal Dog, Council Meeting, Loyalty, Bend the Knee, Royal Parrot) | Every phone shows "📣 Bob must say: …" and the game carries on while they say it. The King speaks the Parrot's sentence himself. | The player's line is posted as a speech bubble. |
-| Negotiation | **Trade** tab: only what physically changes hands — 💰 give gold, 🔄 swap a card, 🗑️ discard a card. The other player confirms on their phone. Everything else (promises, alliances, threats) is said out loud. | **Deals** tab: full offers (gold both ways, card swaps, discards) plus chat. |
+| Spoken cards (Actors, Loyal Dog, Council Meeting, Loyalty, Bend the Knee, Royal Parrot) | Every phone shows "Bob must say: …" and the game carries on while they say it. The King speaks the Parrot's sentence himself. | The player's line is posted as a speech bubble. |
+| Negotiation | **Trade** tab: only what physically changes hands — give gold, swap a card, discard a card. The other player confirms on their phone. Everything else (promises, alliances, threats) is said out loud. | **Deals** tab: full offers (gold both ways, card swaps, discards) plus chat. |
 | Both | Votes, support for a Betrayal, King Makers, dice and choices that cost gold stay as buttons. The 400-gold receive limit, 1-for-1 card swaps and "King and Noble cards never mix" are enforced. A card offered in a swap stays face down until the swap happens — players can lie. Deals are never binding: a "gold for a card" deal is two handovers, and either side can betray halfway. | |
 
-**Everyone's gold, any time:** the 💰 **Gold** button in the top bar shows every
+**Everyone's gold, any time:** the **Gold** button in the top bar shows every
 player's official character card with their eye token on it. Tokens only ever
 move when the server moves gold, so the table can always check the count.
 

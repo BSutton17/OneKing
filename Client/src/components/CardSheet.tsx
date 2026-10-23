@@ -43,7 +43,7 @@ export function CardSheet({ card, name, isKing, onClose }: { card: HandCard; nam
       <div className="split-body">
       <h2>{def.name}</h2>
       {!def.options && <p className="printed">{def.printedText}</p>}
-      {def.timing && <p className="faint center" style={{ fontSize: '.78rem' }}>⏳ {def.timing}</p>}
+      {def.timing && <p className="faint center" style={{ fontSize: '.78rem' }}>{def.timing}</p>}
       {!card.play.ok && card.play.reason && <p className="reason">{card.play.reason}</p>}
 
       {def.options && (

@@ -26,6 +26,9 @@ export function CardImg({ def, cardKey, small = true, dim, selected, onClick, la
   );
 }
 
+/** The King card back, used wherever the King needs marking. */
+export const Crown = () => <img className="crown" src={backSrc('king')} alt="" aria-hidden="true" />;
+
 export function BackImg({ deck }: { deck: Role | 'character' }) {
   return (
     <div className="card">

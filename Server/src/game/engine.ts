@@ -76,7 +76,7 @@ export function createGame(seated: { id: PlayerId; name: string }[], opts: { con
 
   g.turnOrder = orderFor(g);
   const king = kingOf(g);
-  log(g, 'round', `The character cards are revealed: 👑 ${king.name} is the King (${START_GOLD.king} gold); everyone else is a Noble (${START_GOLD.noble} gold).`);
+  log(g, 'round', `The character cards are revealed: ${king.name} is the King (${START_GOLD.king} gold); everyone else is a Noble (${START_GOLD.noble} gold).`);
   log(g, 'round', `Round 1 — clockwise, starting with the King`);
   advance(g);
   return g;
@@ -317,7 +317,7 @@ function gameOver(g: GameState) {
   g.phase = 'over';
   g.winner = king.id;
   g.negotiation = null;
-  log(g, 'over', `👑 After four rounds, ${king.name} is the King — and the winner! There's only One Crown.`, { actor: king.id });
+  log(g, 'over', `After four rounds, ${king.name} is the King — and the winner! There's only One Crown.`, { actor: king.id });
 }
 
 // ---- playing cards -------------------------------------------------------------------

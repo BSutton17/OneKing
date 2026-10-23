@@ -64,10 +64,10 @@ export function Game({ room }: { room: RoomView }) {
     if (confirm('Leave the game? Your seat is kept if you come back with this browser.')) void api.leave();
   };
   const tabs = [
-    ['table', '♛', 'Table', 0],
-    ['hand', '🂠', 'Hand', myTurn ? playable : 0],
-    ['deals', '🤝', inPerson ? 'Trade' : 'Deals', incoming.length],
-    ['log', '☰', 'Log', 0],
+    ['table', 'Table', 0],
+    ['hand', 'Hand', myTurn ? playable : 0],
+    ['deals', inPerson ? 'Trade' : 'Deals', incoming.length],
+    ['log', 'Log', 0],
   ] as const;
 
   return (
@@ -80,7 +80,7 @@ export function Game({ room }: { room: RoomView }) {
           {g.phase === 'negotiation' && g.negotiation && <Countdown deadline={g.negotiation.endsAt} />}
         </div>
         <button className="tb-gold" onClick={() => setAllGold(true)} aria-label="See everyone's gold">
-          <span aria-hidden="true">💰</span>Gold
+          Gold
         </button>
         <button className={`status-line${myPrompt || myTurn ? ' mine' : ''}`}
           onClick={() => (myPrompt ? setHiddenPrompt(null) : myTurn ? setTab('hand') : undefined)}>
@@ -101,7 +101,7 @@ export function Game({ room }: { room: RoomView }) {
           <div className="hand-head">
             <div className="hand-money"><MoneyTracker role={me.role} gold={me.gold} caption={false} /></div>
             <div className="stack grow" style={{ gap: 4 }}>
-              <h2 style={{ textAlign: 'left' }}>{me.role === 'king' ? '👑 You are the King' : 'You are a Noble'}</h2>
+              <h2 style={{ textAlign: 'left' }}>{me.role === 'king' ? 'You are the King' : 'You are a Noble'}</h2>
               <span className="me-gold">{me.gold} gold</span>
               <span className="muted" style={{ fontSize: '.8rem' }}>
                 {myTurn && g.turn ? `Play ${g.turn.allowance - g.turn.plays} more.` : 'Tap a card to read it.'} Any card can be placed face down as a (claimed) Knight.
@@ -112,7 +112,7 @@ export function Game({ room }: { room: RoomView }) {
             {g.hand.map((h) => (
               <div key={h.id} className="card-cell" role="listitem">
                 <CardImg cardKey={h.key} dim={myTurn && !h.play.ok && !h.place.ok} onClick={() => setOpenCard(h.id)} />
-                <small>{myTurn ? (h.play.ok ? '▶ playable' : h.place.ok ? 'face down only' : '—') : ''}</small>
+                <small>{myTurn ? (h.play.ok ? 'Playable' : h.place.ok ? 'face down only' : '—') : ''}</small>
               </div>
             ))}
           </div>
@@ -135,12 +135,12 @@ export function Game({ room }: { room: RoomView }) {
         <button className="me-open" onClick={() => setOpenPlayer(g.you)} aria-label="Your money card">
           <img className="mini-card" src={art(characterCard(me.role).src)} alt="" />
           <span className="me-gold">{me.gold}</span>
-          <span className="me-label muted">{me.role === 'king' ? '👑 King' : 'Noble'} · {me.name}</span>
+          <span className="me-label muted">{me.role === 'king' ? 'King' : 'Noble'} · {me.name}</span>
         </button>
         <nav className="tabs" role="tablist">
-          {tabs.map(([id, ico, label, badge]) => (
+          {tabs.map(([id, label, badge]) => (
             <button key={id} role="tab" aria-selected={tab === id} className={`tab${tab === id ? ' active' : ''}`} onClick={() => setTab(id)}>
-              <span className="ico" aria-hidden="true">{ico}</span>{label}
+              {label}
               {badge > 0 && <span className="badge">{badge}</span>}
             </button>
           ))}

@@ -69,7 +69,7 @@ export const kingCards: Record<string, CardHandler> = {
       if (choiceOf(p, t) === 'refuse') {
         say(g, `${n(g, t)} refuses to thank the King`);
         bankLoss(g, t, 300, src(res));
-      } else if (g.config.mode === 'inPerson') log(g, 'say', `📣 ${n(g, t)} must thank ${n(g, res.actor)} for everything they've done for them.`, { actor: t });
+      } else if (g.config.mode === 'inPerson') log(g, 'say', `${n(g, t)} must thank ${n(g, res.actor)} for everything they've done for them.`, { actor: t });
       else log(g, 'speech', `Thank you, my King, for everything you've done for me.`, { actor: t });
     },
   },
@@ -163,7 +163,7 @@ export const kingCards: Record<string, CardHandler> = {
         text: res.setup.sentence
           ? `Repeat in a high-pitched voice: "${res.setup.sentence}" — or refuse and pay the bank 300.`
           : `Repeat ${n(g, res.actor)}'s sentence out loud in a high-pitched voice — or refuse and pay the bank 300.`,
-        options: [{ value: 'repeat', label: 'Repeat it 🦜' }, { value: 'refuse', label: 'Refuse (pay 300)' }],
+        options: [{ value: 'repeat', label: 'Repeat it' }, { value: 'refuse', label: 'Refuse (pay 300)' }],
       });
     },
     onPrompt(g, res, p) {
@@ -171,8 +171,8 @@ export const kingCards: Record<string, CardHandler> = {
       if (choiceOf(p, t) === 'refuse') {
         say(g, `${n(g, t)} refuses to repeat it`);
         bankLoss(g, t, 300, src(res));
-      } else if (res.setup.sentence) log(g, 'speech', `🦜 ${String(res.setup.sentence).toUpperCase()}`, { actor: t });
-      else log(g, 'say', `🦜 ${n(g, t)} repeats the King's sentence in a high-pitched voice`, { actor: t });
+      } else if (res.setup.sentence) log(g, 'speech', String(res.setup.sentence).toUpperCase(), { actor: t });
+      else log(g, 'say', `${n(g, t)} repeats the King's sentence in a high-pitched voice`, { actor: t });
     },
   },
 

@@ -35,7 +35,7 @@ export function knightBlocksBetrayal(g: GameState, targetId: PlayerId): boolean 
   if (real) {
     g.faceDown = g.faceDown.filter((f) => f !== real);
     discard(g, real.cardId);
-    log(g, 'info', `🛡️ A Knight in front of ${nameOf(g, targetId)} is revealed and blocks the Betrayal!`);
+    log(g, 'info', `A Knight in front of ${nameOf(g, targetId)} is revealed and blocks the Betrayal!`);
     return true;
   }
   if (mine.length) {

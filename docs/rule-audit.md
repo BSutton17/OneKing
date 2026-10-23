@@ -97,11 +97,11 @@ front before the card resolves).
 
 ### Same room vs apart (host setting)
 
-* **M1 — In person (default).** Players talk out loud, so there is no chat. Spoken-line cards (C12) show an instruction on every phone ("📣 Bob must say: …") and do not wait; the Royal Parrot's sentence is spoken by the King, not typed. Anything that changes the game state stays a button: votes, Betrayal support, King Maker, dice, and choices that cost gold (refusing Bend the Knee or the Parrot).
+* **M1 — In person (default).** Players talk out loud, so there is no chat. Spoken-line cards (C12) show an instruction on every phone ("Bob must say: …") and do not wait; the Royal Parrot's sentence is spoken by the King, not typed. Anything that changes the game state stays a button: votes, Betrayal support, King Maker, dice, and choices that cost gold (refusing Bend the Knee or the Parrot).
 * **M2 — In-person trading.** Negotiation is verbal; the phones only record what physically changes hands: give gold, swap a card (1-for-1), discard a card as part of a deal. Each needs the other player's confirmation. Multi-part deals are separate handovers, so — exactly as at a real table — either side can renege halfway (Rules p14: no deal is binding).
 * **M3 — Virtual.** Table chat, private messages, combined deal offers, and spoken lines as speech bubbles.
 * **M4 — Swapped cards stay face down** until the swap happens, in both modes: the rules let players lie about what they're offering. A card discarded as part of a deal is shown, since discards are put down openly.
 
 ### Things the digital edition adds (not rules)
 
-4-digit room codes, reconnect tokens, the 💰 everyone's-gold view, the response timeouts above, the "Done negotiating" early finish, in-room chat, and the optional physical-dice mode.
+4-digit room codes, reconnect tokens, the everyone's-gold view, the response timeouts above, the "Done negotiating" early finish, in-room chat, and the optional physical-dice mode.

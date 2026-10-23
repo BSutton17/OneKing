@@ -43,7 +43,7 @@ export const noble: Record<string, CardHandler> = {
         const t = target(res);
         announce(g, res, `everyone must laugh at ${n(g, t)}`);
         speak(g, res, {
-          title: `Laugh at ${n(g, t)}`, text: `Everyone must laugh at ${n(g, t)}.`, who: others(g, t), line: `HA HA HA! 🤣 ${n(g, t)}!`, allowCustom: true,
+          title: `Laugh at ${n(g, t)}`, text: `Everyone must laugh at ${n(g, t)}.`, who: others(g, t), line: `HA HA HA! ${n(g, t)}!`, allowCustom: true,
           instruction: `Everyone must laugh at ${n(g, t)}!`,
         });
       }
@@ -179,7 +179,7 @@ export const noble: Record<string, CardHandler> = {
         announce(g, res, 'draws two cards and must praise the King');
         draw(g, res.actor, 2);
         speak(g, res, {
-          title: 'Praise the King', text: 'You must praise the King.', who: [res.actor], line: 'Long live the King! 👑', allowCustom: true,
+          title: 'Praise the King', text: 'You must praise the King.', who: [res.actor], line: 'Long live the King!', allowCustom: true,
           instruction: `${n(g, res.actor)} must praise ${n(g, kingOf(g).id)}.`,
         });
         return;

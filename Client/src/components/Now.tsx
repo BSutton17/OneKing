@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { setupSummary, type NameOf } from '../lib/game';
 import type { GameView, RoomView } from '../lib/types';
 import { api, useStore } from '../net/socket';
-import { BackImg, CardImg, Countdown } from './common';
+import { BackImg, CardImg, Countdown, Crown } from './common';
 import { Answers } from './PromptSheet';
 
 /** The card being resolved / whose turn it is / the negotiation timer. */
@@ -14,7 +14,7 @@ export function NowPanel({ g, name, onAnswer }: { g: GameView; name: NameOf; onA
     const p = res.prompt;
     return (
       <section className="panel now" aria-live="polite">
-        <div>{res.cardKey ? <CardImg cardKey={res.cardKey} /> : <div className="card" style={{ display: 'grid', placeItems: 'center', background: 'var(--gold)', color: '#111', fontSize: 34 }}>👑</div>}</div>
+        <div>{res.cardKey ? <CardImg cardKey={res.cardKey} /> : <BackImg deck="king" />}</div>
         <div className="text">
           <span className="now-title">
             {res.kind === 'rolloff' ? 'Two Nobles pass the King at once!' : `${name(res.actor)} plays ${def?.name ?? 'a card'}${res.option !== null && def?.options ? ` (option ${res.option + 1})` : ''}`}
@@ -73,7 +73,7 @@ export function LogPane({ g, name }: { g: GameView; name: NameOf }) {
         <ol className="log" aria-label="Game log, newest first">
           {[...g.log].reverse().map((e) => (
             <li key={e.id} className={`k-${e.kind}`}>
-              {e.kind === 'speech' ? <><b>{name(e.actor)}:</b> “{e.text}”</> : e.kind === 'private' ? <>🔒 {e.text}</> : e.text}
+              {e.kind === 'speech' ? <><b>{name(e.actor)}:</b> “{e.text}”</> : e.kind === 'private' ? <><b>Private:</b> {e.text}</> : e.text}
             </li>
           ))}
         </ol>
@@ -109,7 +109,7 @@ export function GameOver({ room, name, onClose }: { room: RoomView; name: NameOf
           <tbody>
             {standings.map((p, i) => (
               <tr key={p.id}>
-                <td>{p.role === 'king' ? '👑' : i + 1}</td>
+                <td>{p.role === 'king' ? <Crown /> : i + 1}</td>
                 <td style={{ textAlign: 'left' }}>{p.name}{p.id === g.you ? ' (you)' : ''}</td>
                 <td>{p.gold}</td>
               </tr>

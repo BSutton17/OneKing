@@ -14,20 +14,20 @@ export function statusTags(g: GameView, pid: PlayerId, name: NameOf): { text: st
   const other = (s: { a: string; b: string }) => (s.a === pid ? s.b : s.a);
   for (const s of g.statuses as Status[]) {
     switch (s.kind) {
-      case 'isolationLook': if (s.playerId === pid) out.push({ text: '🙈 Cards hidden' }); break;
-      case 'isolationGold': if (s.playerId === pid) out.push({ text: '🛡️ Gold protected' }); break;
-      case 'kingsEye': if (s.playerId === pid) out.push({ text: "👁️ King's Eye" }); break;
-      case 'shiftingTides': if (s.a === pid || s.b === pid) out.push({ text: `🌊 Takes only from ${name(other(s))}`, warn: true }); break;
+      case 'isolationLook': if (s.playerId === pid) out.push({ text: 'Cards hidden' }); break;
+      case 'isolationGold': if (s.playerId === pid) out.push({ text: 'Gold protected' }); break;
+      case 'kingsEye': if (s.playerId === pid) out.push({ text: "King's Eye" }); break;
+      case 'shiftingTides': if (s.a === pid || s.b === pid) out.push({ text: `Takes only from ${name(other(s))}`, warn: true }); break;
       case 'badBlood':
-        if (s.owner === pid) out.push({ text: `⚡ Profits from ${name(s.a)} vs ${name(s.b)}` });
-        if (s.a === pid || s.b === pid) out.push({ text: `⚡ Bad blood with ${name(other(s))}`, warn: true });
+        if (s.owner === pid) out.push({ text: `Profits from ${name(s.a)} vs ${name(s.b)}` });
+        if (s.a === pid || s.b === pid) out.push({ text: `Bad blood with ${name(other(s))}`, warn: true });
         break;
       case 'debt':
-        if (s.debtor === pid) out.push({ text: `⛓️ Owes ${name(s.creditor)}`, warn: true });
-        if (s.creditor === pid) out.push({ text: `⛓️ ${name(s.debtor)} owes them` });
+        if (s.debtor === pid) out.push({ text: `Owes ${name(s.creditor)}`, warn: true });
+        if (s.creditor === pid) out.push({ text: `${name(s.debtor)} owes them` });
         break;
-      case 'hindsight': if (s.owner === pid) out.push({ text: `🔮 Hindsight: ${name(s.backed)} (R${s.deadlineRound})` }); break;
-      case 'scout': if (s.owner === pid) out.push({ text: `🔭 Scout: ${name(s.backed)} (R${s.deadlineRound})` }); break;
+      case 'hindsight': if (s.owner === pid) out.push({ text: `Hindsight: ${name(s.backed)} (R${s.deadlineRound})` }); break;
+      case 'scout': if (s.owner === pid) out.push({ text: `Scout: ${name(s.backed)} (R${s.deadlineRound})` }); break;
     }
   }
   return out;

@@ -2,10 +2,8 @@ import { backSrc } from '../lib/art';
 import { statusTags, type NameOf } from '../lib/game';
 import type { GameView, PlayerId, RoomView } from '../lib/types';
 import { api } from '../net/socket';
-import { BackImg, CardImg, Sheet } from './common';
+import { BackImg, CardImg, Crown, Sheet } from './common';
 import { MoneyTracker } from './MoneyTracker';
-
-const Crown = () => <img className="crown" src={backSrc('king')} alt="" aria-hidden="true" />;
 
 /** Everyone, in this round's turn order (King first). */
 export function PlayerList({ room, name, onSelect }: { room: RoomView; name: NameOf; onSelect: (id: PlayerId) => void }) {
@@ -30,7 +28,7 @@ export function PlayerList({ room, name, onSelect }: { room: RoomView; name: Nam
               <span className="pmeta">
                 {!online.get(p.id) && <span className="tag warn">offline</span>}
                 {isTurn && <span className="tag king">playing {g.turn!.plays}/{g.turn!.allowance}</span>}
-                <span className="tag">🂠 {p.handCount}</span>
+                <span className="tag">{p.handCount} cards</span>
                 {p.faceDown.length > 0 && (
                   <span className="tag" title="Face-down cards claimed to be Knights">
                     <span className="fd-backs">{p.faceDown.map((f) => <img key={f.slot} src={backSrc(f.deck)} alt="" />)}</span>
@@ -60,7 +58,7 @@ export function PlayerSheet({ room, id, name, onClose, onMessage, onOffer }: {
   const debts = g.statuses.filter((s) => g.legal.freeDebtor.includes(s.id) && s.kind === 'debt' && s.debtor === id);
   return (
     <Sheet onClose={onClose} label={`${p.name}'s details`}>
-      <h2>{p.role === 'king' ? '👑 ' : ''}{p.name}{me ? ' (you)' : ''}</h2>
+      <h2>{p.role === 'king' && <Crown />}{p.name}{me ? ' (you)' : ''}</h2>
       <p className="center muted">{p.role === 'king' ? 'The King' : 'A Noble'} · seat {p.seat + 1} · {p.handCount} cards in hand</p>
       <div style={{ maxWidth: 260, margin: '12px auto 0' }}>
         <MoneyTracker role={p.role} gold={p.gold} />

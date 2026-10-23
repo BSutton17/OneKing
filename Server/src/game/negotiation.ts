@@ -127,7 +127,7 @@ export function acceptOffer(g: GameState, by: PlayerId, offerId: unknown, cardId
     refill(g, who);
   }
   g.negotiation!.offers = offers.filter((x) => x !== o && !touches(x, o, card, disc));
-  log(g, 'deal', `🤝 Deal: ${parts.join('; ')}`, { actor: by });
+  log(g, 'deal', `Deal: ${parts.join('; ')}`, { actor: by });
 }
 
 /** Other open offers that relied on a card that just moved. */
